@@ -9,19 +9,37 @@ import { TX_STATUS } from "@/lib/dana/qris";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function pathOf(url: string | undefined) {
+  if (!url) return undefined;
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return url.startsWith("/") ? url : undefined;
+  }
+}
+
 /**
  * DANA Finish Notify (webhook)
- * URL publik: https://<domain>/v1.0/debit/notify  (di-rewrite ke route ini lewat next.config.mjs)
+ * URL publik: https://<domain>/v1.0/debit/notify  (di-rewrite ke route ini lewat next.config.ts)
  * Response sukses wajib: {"responseCode":"2005600","responseMessage":"Successful"}
  */
 export async function POST(req: Request) {
   const cfg = getDanaConfig();
+  // Raw body persis seperti dikirim DANA — JANGAN pakai req.json() sebelum verifikasi
   const rawBody = await req.text();
   const timestamp = req.headers.get("x-timestamp");
   const signature = req.headers.get("x-signature");
 
   const candidatePaths = Array.from(
-    new Set([cfg.webhookPath, DANA_PATHS.notify, new URL(req.url).pathname, "/api/dana/notify"])
+    new Set(
+      [
+        cfg.webhookPath,
+        DANA_PATHS.notify,
+        pathOf(cfg.notifyUrl),
+        new URL(req.url).pathname,
+        "/api/dana/notify",
+      ].filter((p): p is string => Boolean(p))
+    )
   );
   const verify = verifyWebhookSignature({ rawBody, timestamp, signature, candidatePaths });
 
@@ -33,7 +51,7 @@ export async function POST(req: Request) {
   }
 
   const amountObj = body?.amount as { value?: string } | undefined;
-  const additional = body?.additionalInfo as { paidTime?: string } | undefined;
+  const additional = body?.additionalInfo as { paidTime?: string; paymentInfo?: { paidTime?: string } } | undefined;
   const ref = body?.originalPartnerReferenceNo as string | undefined;
   const status = body?.latestTransactionStatus as string | undefined;
 
@@ -44,20 +62,26 @@ export async function POST(req: Request) {
       verified: verify.valid,
       verifyError: verify.error,
       matchedPath: verify.matchedPath,
+      matchedKey: verify.matchedKey,
+      matchedForm: verify.matchedForm,
       partnerReferenceNo: ref,
       referenceNo: body?.originalReferenceNo as string | undefined,
       status,
       amount: amountObj?.value,
       headers: {
         "x-timestamp": timestamp ?? "",
+        "x-signature": signature ?? "",
         "x-partner-id": req.headers.get("x-partner-id") ?? "",
         "x-external-id": req.headers.get("x-external-id") ?? "",
         "channel-id": req.headers.get("channel-id") ?? "",
+        "content-type": req.headers.get("content-type") ?? "",
       },
+      verifyDebug: verify.debug,
+      // raw disimpan hanya saat gagal verifikasi, untuk investigasi
+      rawBody: verify.valid ? undefined : rawBody,
       body: body ?? rawBody,
     });
 
-    // Hanya update status transaksi jika signature valid
     if ((verify.valid || cfg.webhookSkipVerify) && ref) {
       await saveTxnStatus({
         partnerReferenceNo: ref,
@@ -65,14 +89,13 @@ export async function POST(req: Request) {
         status,
         statusDesc: status ? TX_STATUS[status] ?? (body?.transactionStatusDesc as string) : undefined,
         amount: amountObj?.value,
-        paidTime: additional?.paidTime,
+        paidTime: additional?.paidTime ?? additional?.paymentInfo?.paidTime,
         updatedAt: new Date().toISOString(),
         source: "webhook",
       });
     }
   } catch (e) {
     console.error("[dana:notify] store error", e);
-    // Storage gagal → minta DANA retry
     return NextResponse.json(
       { responseCode: "5005601", responseMessage: "Internal Server Error" },
       { status: 500, headers: { "X-TIMESTAMP": jakartaTimestamp() } }
@@ -80,7 +103,7 @@ export async function POST(req: Request) {
   }
 
   if (!verify.valid && !cfg.webhookSkipVerify) {
-    console.warn("[dana:notify] invalid signature", verify.error);
+    console.warn("[dana:notify] invalid signature", verify.error, verify.debug);
     return NextResponse.json(
       { responseCode: "4015600", responseMessage: "Unauthorized. Invalid Signature" },
       { status: 401, headers: { "X-TIMESTAMP": jakartaTimestamp() } }

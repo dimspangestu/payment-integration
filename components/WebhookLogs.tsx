@@ -11,6 +11,11 @@ interface Entry {
   receivedAt: string;
   verified: boolean;
   verifyError?: string;
+  matchedPath?: string;
+  matchedKey?: string;
+  matchedForm?: number;
+  verifyDebug?: unknown;
+  rawBody?: string;
   partnerReferenceNo?: string;
   referenceNo?: string;
   status?: string;
@@ -122,7 +127,13 @@ export default function WebhookLogs({ config }: { config: AppConfig | null }) {
                   {isOpen && (
                     <div className="space-y-2 px-4 pb-4">
                       {!it.verified && <p className="text-xs text-rose-300">Signature tidak valid: {it.verifyError}</p>}
-                      <JsonBlock value={{ headers: it.headers, body: it.body }} />
+                      <JsonBlock
+                        value={
+                          it.verified
+                            ? { matched: { path: it.matchedPath, key: it.matchedKey, form: it.matchedForm }, headers: it.headers, body: it.body }
+                            : { verifyDebug: it.verifyDebug, headers: it.headers, rawBody: it.rawBody, body: it.body }
+                        }
+                      />
                     </div>
                   )}
                 </li>

@@ -12,6 +12,10 @@ export interface WebhookEntry {
   verified: boolean;
   verifyError?: string;
   matchedPath?: string;
+  matchedKey?: string;
+  matchedForm?: number;
+  verifyDebug?: unknown;
+  rawBody?: string;
   partnerReferenceNo?: string;
   referenceNo?: string;
   status?: string;
