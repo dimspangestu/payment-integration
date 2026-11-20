@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-jb), ui-monospace, monospace;
+
+  --color-ink-950: #060b18;
+  --color-ink-900: #0a1224;
+  --color-ink-850: #0e1830;
+  --color-ink-800: #13203d;
+  --color-ink-700: #1c2c50;
+  --color-ink-600: #2a3d66;
+  --color-ink-400: #7d8db0;
+  --color-ink-300: #a6b3cf;
+
+  --color-dana-300: #7cc4f8;
+  --color-dana-400: #3fa9f5;
+  --color-dana-500: #118eea;
+  --color-dana-600: #0b72c2;
+}
+
+html,
+body {
+  background: var(--color-ink-950);
+  color: #e6ecf8;
+}
+
+body {
+  background-image:
+    radial-gradient(900px 500px at 85% -10%, rgba(17, 142, 234, 0.18), transparent 60%),
+    radial-gradient(700px 400px at -10% 110%, rgba(16, 185, 129, 0.08), transparent 60%);
+  background-attachment: fixed;
+}
+
+/*
+ * PENTING (Tailwind v4): class custom harus di @layer components.
+ * CSS di luar layer selalu menang atas utilities, sehingga pl-10, font-mono, min-h-28 dll
+ * tidak berlaku (penyebab teks menimpa prefix "Rp").
+ */
+@layer components {
+  .card {
+    background: linear-gradient(180deg, rgba(19, 32, 61, 0.75), rgba(14, 24, 48, 0.75));
+    border: 1px solid rgba(124, 196, 248, 0.09);
+    border-radius: 1.25rem;
+    backdrop-filter: blur(10px);
+  }
+
+  .input {
+    width: 100%;
+    background: rgba(6, 11, 24, 0.6);
+    border: 1px solid var(--color-ink-700);
+    border-radius: 0.75rem;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.925rem;
+    color: #e6ecf8;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .input::placeholder {
+    color: var(--color-ink-400);
+    opacity: 0.7;
+  }
+  .input:focus {
+    border-color: var(--color-dana-500);
+    box-shadow: 0 0 0 3px rgba(17, 142, 234, 0.2);
+  }
+
+  .qr-frame {
+    background:
+      linear-gradient(#fff, #fff) padding-box,
+      conic-gradient(from 180deg, #118eea, #7cc4f8, #10b981, #118eea) border-box;
+    border: 3px solid transparent;
+  }
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(17, 142, 234, 0.5); }
+  100% { box-shadow: 0 0 0 12px rgba(17, 142, 234, 0); }
+}
+.pulse-ring { animation: pulse-ring 1.6s ease-out infinite; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--color-ink-700); border-radius: 8px; }
