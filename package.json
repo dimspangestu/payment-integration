@@ -9,6 +9,7 @@
     "test:sign": "node scripts/test-signature.mjs"
   },
   "dependencies": {
+    "barcode-detector": "^3.2.4",
     "lucide-react": "^1.76.0",
     "next": "^16.4.6",
     "qrcode": "^1.5.4",
