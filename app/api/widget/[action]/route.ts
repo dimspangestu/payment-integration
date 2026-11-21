@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { baseUrl, notifyUrlFor } from "@/lib/checkout-token";
 import { clientIp, handleError, readJson, respond } from "@/lib/dana/route-helpers";
+import { getDanaConfig } from "@/lib/dana/config";
 import { saveTxnStatus } from "@/lib/dana/store";
 import { DanaInputError, generateRef, requireString } from "@/lib/dana/utils";
 import {
@@ -37,8 +38,11 @@ export async function POST(req: Request, ctx: { params: Promise<{ action: string
     const d = device(req, b);
     switch (action) {
       case "oauth-url": {
-        const { url, state } = oauthUrl({ redirectUrl: `${baseUrl(req)}/widget/callback`, mobile: b.mobile as string });
-        return NextResponse.json({ ok: true, url, state });
+        const cfg = getDanaConfig();
+        const { url, state, params } = oauthUrl({ redirectUrl: cfg.widgetRedirectUrl || `${baseUrl(req)}/widget/callback`, mobile: b.mobile as string });
+        // Sandbox + DANA_DEBUG: tampilkan parameter dulu agar bisa dicocokkan dengan konfigurasi di dashboard DANA
+        const inspect = cfg.isSandbox && cfg.debug ? { ...params, seamlessSign: params.seamlessSign ? params.seamlessSign.slice(0, 16) + "…" : undefined } : undefined;
+        return NextResponse.json({ ok: true, url, state, inspect });
       }
       case "token":
         return respond(await applyToken({ authCode: b.authCode as string, refreshToken: b.refreshToken as string }));

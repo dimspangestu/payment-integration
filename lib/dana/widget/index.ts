@@ -60,7 +60,7 @@ export function oauthUrl(input: { redirectUrl: string; state?: string; mobile?: 
   if (!creds.partnerId) throw new DanaInputError("DANA_WIDGET_PARTNER_ID / DANA_PARTNER_ID belum di-set");
   const base = cfg.isSandbox ? "https://m.sandbox.dana.id/v1.0/get-auth-code" : "https://m.dana.id/v1.0/get-auth-code";
   const scopes =
-    input.scopes || (cfg.isSandbox ? "CASHIER,AGREEMENT_PAY,QUERY_BALANCE,DEFAULT_BASIC_PROFILE,MINI_DANA" : "MINI_DANA,CASHIER,QUERY_BALANCE,DEFAULT_BASIC_PROFILE");
+    input.scopes || cfg.widgetScopes || (cfg.isSandbox ? "CASHIER,AGREEMENT_PAY,QUERY_BALANCE,DEFAULT_BASIC_PROFILE,MINI_DANA" : "MINI_DANA,CASHIER,QUERY_BALANCE,DEFAULT_BASIC_PROFILE");
   const state = input.state || crypto.randomUUID();
 
   const params: Record<string, string> = {
@@ -73,7 +73,7 @@ export function oauthUrl(input: { redirectUrl: string; state?: string; mobile?: 
     state,
     isSnapBI: "true",
   };
-  if (creds.merchantId) params.merchantId = creds.merchantId;
+  if (creds.merchantId && cfg.widgetOauthMerchant) params.merchantId = creds.merchantId;
 
   // seamlessData: prefill nomor HP di halaman login DANA (opsional), ditandatangani private key
   const mobile = optionalString(input.mobile)?.replace(/\D/g, "");
@@ -86,7 +86,7 @@ export function oauthUrl(input: { redirectUrl: string; state?: string; mobile?: 
   const qs = Object.entries(params)
     .map(([k, v]) => `${k}=${OAUTH_ESCAPE.has(k) ? encodeURIComponent(v) : v}`)
     .join("&");
-  return { url: `${base}?${qs}`, state };
+  return { url: `${base}?${qs}`, state, params };
 }
 
 /* ---------------------------- 2. Apply Token ---------------------------- */

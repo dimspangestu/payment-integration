@@ -138,3 +138,15 @@ proxy.ts             # Basic Auth (Next 16 Proxy, pengganti middleware) — kecu
 - Refund: `refundOptionBill` hanya dikirim jika `DANA_REFUND_PAY_METHOD` di-set.
 - Timeout ke DANA (MPM/CPM) → status `TIMEOUT`; selalu lanjutkan dengan **Cek Query** sebelum retry.
 - Riwayat transaksi di UI disimpan di localStorage browser; status sumber kebenaran tetap Query / webhook.
+
+## URL di DANA Dashboard (Mandatory Endpoints)
+
+Ketiga field harus berbeda:
+
+| Field | URL | Respons sukses |
+|---|---|---|
+| Finish Payment URL | `https://<domain>/v1.0/debit/notify` | `2005600` |
+| Disburse to Bank Notify URL | `https://<domain>/v1.0/debit/emoney/transfer-bank/notify.htm` | `2004300` |
+| Finish Redirect URL | `https://<domain>/widget/callback` | (halaman browser, bukan webhook) |
+
+Kedua endpoint notify bisa diakses publik tanpa login, dan signature-nya diverifikasi dengan public key DANA.

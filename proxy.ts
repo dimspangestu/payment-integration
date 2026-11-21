@@ -59,5 +59,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api/dana/notify|v1\\.0/debit/notify|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api/dana/notify|v1\\.0/debit/notify|v1\\.0/debit/emoney/transfer-bank/notify|_next/static|_next/image|favicon.ico).*)"],
 };

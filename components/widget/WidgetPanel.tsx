@@ -22,6 +22,7 @@ export default function WidgetPanel({ config, prefill }: { config: AppConfig | n
   const [busy, setBusy] = useState<"" | "bind" | "balance" | "profile" | "refresh" | "unbind" | "pay">("");
   const [accountResult, setAccountResult] = useState<ApiResult | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
+  const [inspect, setInspect] = useState<{ url: string; state: string; params: Record<string, string> } | null>(null);
 
   const [title, setTitle] = useState("Pembayaran via DANA Widget");
   const [amount, setAmount] = useState("");
@@ -37,10 +38,20 @@ export default function WidgetPanel({ config, prefill }: { config: AppConfig | n
 
   async function bind() {
     setBusy("bind");
-    const r = await postApi("/api/widget/oauth-url", { mobile: mobile || undefined });
-    if (r.ok && (r as unknown as { url: string }).url) {
-      saveOauthState((r as unknown as { state: string }).state);
-      window.location.href = (r as unknown as { url: string }).url;
+    const r = (await postApi("/api/widget/oauth-url", { mobile: mobile || undefined })) as ApiResult & {
+      url?: string;
+      state?: string;
+      inspect?: Record<string, string>;
+    };
+    if (r.ok && r.url) {
+      saveOauthState(r.state ?? "");
+      if (r.inspect) {
+        // DANA_DEBUG=true: tampilkan parameter dulu, user klik "Lanjut ke DANA"
+        setInspect({ url: r.url, state: r.state ?? "", params: r.inspect });
+        setBusy("");
+        return;
+      }
+      window.location.href = r.url;
       return;
     }
     setAccountResult(r);
@@ -176,6 +187,33 @@ export default function WidgetPanel({ config, prefill }: { config: AppConfig | n
               <Button onClick={bind} loading={busy === "bind"} className="w-full sm:w-auto">
                 <Link2 className="h-4 w-4" /> Hubungkan akun DANA
               </Button>
+              {inspect && (
+                <div className="space-y-3 rounded-xl border border-amber-400/25 bg-amber-500/5 p-4">
+                  <div className="text-sm font-semibold text-amber-200">Periksa URL OAuth (DANA_DEBUG)</div>
+                  <p className="text-xs text-ink-300">
+                    Pastikan <b>redirectUrl</b> sama persis dengan Redirect URL di dashboard DANA, dan <b>partnerId</b>/<b>merchantId</b> milik client yang mengaktifkan
+                    produk Widget.
+                  </p>
+                  <div className="overflow-hidden rounded-lg border border-ink-700/60">
+                    {Object.entries(inspect.params)
+                      .filter(([, v]) => v !== undefined)
+                      .map(([k, v]) => (
+                        <div key={k} className="grid grid-cols-[110px_minmax(0,1fr)] gap-2 border-b border-ink-700/50 px-3 py-1.5 text-xs last:border-0">
+                          <span className="text-ink-400">{k}</span>
+                          <span className="break-all font-mono text-white">{String(v)}</span>
+                        </div>
+                      ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={() => (window.location.href = inspect.url)}>
+                      <ExternalLink className="h-4 w-4" /> Lanjut ke DANA
+                    </Button>
+                    <span className="inline-flex items-center rounded-xl ring-1 ring-ink-700">
+                      <CopyButton text={inspect.url} label="Salin URL" />
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {accountResult && <ResultPanel result={accountResult} />}

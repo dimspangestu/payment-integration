@@ -45,6 +45,12 @@ export function getDanaConfig() {
     pgMcc: env("DANA_PG_MCC", "5732") || "5732",
     // Widget (fixture SDK: 51051000100000000001)
     widgetProductCode: env("DANA_WIDGET_PRODUCT_CODE", "51051000100000000001") || "51051000100000000001",
+    // OAuth binding — harus sama persis dengan Redirect URL yang didaftarkan di dashboard DANA
+    widgetRedirectUrl: env("DANA_WIDGET_REDIRECT_URL"),
+    // Kosong = default SDK (sandbox: CASHIER,AGREEMENT_PAY,QUERY_BALANCE,DEFAULT_BASIC_PROFILE,MINI_DANA)
+    widgetScopes: env("DANA_WIDGET_SCOPES"),
+    // false = jangan kirim merchantId di URL OAuth (opsional menurut docs DANA)
+    widgetOauthMerchant: env("DANA_WIDGET_OAUTH_MERCHANT", "true") !== "false",
     // Disbursement: nomor akun DANA merchant (628xx) untuk Transfer ke Bank
     disbursementCustomerNumber: env("DANA_DISBURSEMENT_CUSTOMER_NUMBER"),
     appUrl: env("APP_URL").replace(/\/+$/, ""),
