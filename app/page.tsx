@@ -5,6 +5,7 @@ import {
   CreditCard,
   Globe,
   LayoutTemplate,
+  LogOut,
   History as HistoryIcon,
   LayoutDashboard,
   Menu,
@@ -87,7 +88,24 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
+  // Deep link: /#mpm, /#pg-custom, dst.
+  useEffect(() => {
+    const fromHash = () => {
+      const h = window.location.hash.slice(1) as TabKey;
+      if (h && h in TITLES) setTab(h);
+    };
+    fromHash();
+    window.addEventListener("hashchange", fromHash);
+    return () => window.removeEventListener("hashchange", fromHash);
+  }, []);
+
+  const logout = useCallback(async () => {
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    window.location.href = "/login";
+  }, []);
+
   const navigate = useCallback((t: TabKey, p?: Prefill) => {
+    if (window.location.hash.slice(1) !== t) history.replaceState(null, "", `#${t}`);
     setPrefill(p ? { ...p } : undefined);
     setTab(t);
     setMobileOpen(false);
@@ -95,8 +113,8 @@ export default function Home() {
   }, []);
 
   const sidebar = (
-    <nav className="flex h-full flex-col">
-      <div className="flex items-center gap-3 px-5 pb-6 pt-6">
+    <nav className="flex h-full flex-col overflow-y-auto overscroll-contain">
+      <div className="flex shrink-0 items-center gap-3 px-5 pb-4 pt-5">
         <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-dana-400 to-dana-600 shadow-lg shadow-dana-500/30">
           <QrCode className="h-5 w-5 text-white" />
         </div>
@@ -105,24 +123,24 @@ export default function Home() {
           <div className="text-xs text-ink-400">QRIS · Payment Gateway</div>
         </div>
       </div>
-      <div className="flex-1 space-y-5 overflow-y-auto px-3">
+      <div className="flex-1 space-y-4 px-3">
         {NAV.map((g) => (
           <div key={g.group || "root"}>
-            {g.group && <div className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-widest text-ink-400/70">{g.group}</div>}
+            {g.group && <div className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-widest text-ink-400/70">{g.group}</div>}
             <ul className="space-y-0.5">
               {g.items.map((it) => (
                 <li key={it.key}>
                   <button
                     onClick={() => navigate(it.key)}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
+                      "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm transition [@media(min-height:860px)]:py-2.5",
                       tab === it.key
                         ? "bg-dana-500/15 font-semibold text-white ring-1 ring-inset ring-dana-400/25"
                         : "text-ink-300 hover:bg-ink-800/60 hover:text-white"
                     )}
                   >
-                    <span className={tab === it.key ? "text-dana-300" : ""}>{it.icon}</span>
-                    {it.label}
+                    <span className={cn("shrink-0", tab === it.key && "text-dana-300")}>{it.icon}</span>
+                    <span className="truncate">{it.label}</span>
                     {it.soon && <span className="ml-auto rounded bg-amber-500/15 px-1.5 py-px text-[10px] font-semibold text-amber-300">SOON</span>}
                   </button>
                 </li>
@@ -131,7 +149,8 @@ export default function Home() {
           </div>
         ))}
       </div>
-      <div className="m-3 rounded-xl border border-ink-700/60 bg-ink-900/60 p-3 text-xs text-ink-400">
+      {/* ikut ter-scroll bersama menu, jadi tidak menutupi item di layar laptop pendek */}
+      <div className="m-3 mt-5 shrink-0 rounded-xl border border-ink-700/60 bg-ink-900/60 p-3 text-xs text-ink-400">
         <div className="flex items-center justify-between">
           <span>Environment</span>
           <Badge tone={config?.env === "production" ? "bad" : "info"} dot>
@@ -162,25 +181,50 @@ export default function Home() {
       )}
 
       <main className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-ink-800/70 bg-ink-950/70 px-4 py-4 backdrop-blur sm:px-8">
-          <button className="rounded-lg p-1.5 text-ink-300 lg:hidden" onClick={() => setMobileOpen(true)}>
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-ink-800/70 bg-ink-950/70 px-4 py-3 backdrop-blur sm:px-8 sm:py-4">
+          <button className="-ml-1 shrink-0 rounded-lg p-1.5 text-ink-300 lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Menu">
             <Menu className="h-5 w-5" />
           </button>
-          <div>
-            <div className="text-xs text-ink-400">DANA / {TITLES[tab]}</div>
-            <h1 className="text-lg font-bold tracking-tight text-white">{TITLES[tab]}</h1>
+          <div className="min-w-0">
+            <div className="hidden truncate text-xs text-ink-400 sm:block">DANA / {TITLES[tab]}</div>
+            <h1 className="truncate text-base font-bold tracking-tight text-white sm:text-lg">{TITLES[tab]}</h1>
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             {config && !config.authEnabled && (
               <span className="hidden items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs text-amber-300 ring-1 ring-amber-400/20 sm:inline-flex">
-                <ShieldAlert className="h-3.5 w-3.5" /> Dashboard tanpa password
+                <ShieldAlert className="h-3.5 w-3.5" /> Dashboard tanpa login
               </span>
             )}
-            {config?.merchantId && <Badge>MID {config.merchantId}</Badge>}
+            {config && !config.authEnabled && (
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-amber-500/10 text-amber-300 ring-1 ring-amber-400/20 sm:hidden" title="Dashboard tanpa login">
+                <ShieldAlert className="h-3.5 w-3.5" />
+              </span>
+            )}
+            {config?.env && (
+              <span className="sm:hidden">
+                <Badge tone={config.env === "production" ? "bad" : "info"}>{config.env}</Badge>
+              </span>
+            )}
+            {config?.merchantId && (
+              <span className="hidden sm:inline-flex">
+                <Badge>MID {config.merchantId}</Badge>
+              </span>
+            )}
+            {config?.authMode === "captcha" && (
+              <button
+                onClick={logout}
+                className="grid h-8 w-8 place-items-center rounded-lg text-ink-400 transition hover:bg-ink-800 hover:text-white sm:w-auto sm:gap-1.5 sm:px-2.5 sm:[display:inline-flex] sm:items-center"
+                title="Keluar"
+                aria-label="Keluar"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden text-xs font-medium sm:inline">Keluar</span>
+              </button>
+            )}
           </div>
         </header>
 
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8">
+        <div className="mx-auto max-w-6xl px-3 py-5 sm:px-8 sm:py-8">
           {tab === "overview" && <Overview config={config} navigate={navigate} />}
           {tab === "mpm" && <MpmForm config={config} navigate={navigate} />}
           {tab === "cpm" && <CpmForm config={config} navigate={navigate} />}

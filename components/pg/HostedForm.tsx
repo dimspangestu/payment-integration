@@ -63,7 +63,7 @@ export default function HostedForm({ navigate }: { navigate: Navigate }) {
   const ref = result?.meta?.partnerReferenceNo as string | undefined;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
       <Card icon={<Globe className="h-5 w-5" />} title="Hosted Checkout" subtitle="Order dibuat via API, customer membayar di halaman DANA (scenario REDIRECT). Paling cepat diintegrasikan.">
         <form onSubmit={submit} className="space-y-4">
           <Field label="Judul order">
@@ -78,7 +78,7 @@ export default function HostedForm({ navigate }: { navigate: Navigate }) {
               <QuickAmounts onPick={setAmount} />
             </Field>
           )}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Berlaku (menit)" hint="Sandbox maks 30 menit">
               <input className="input" inputMode="numeric" value={validMinutes} onChange={(e) => setValidMinutes(e.target.value.replace(/\D/g, ""))} />
             </Field>
@@ -126,7 +126,7 @@ export default function HostedForm({ navigate }: { navigate: Navigate }) {
         />
       </Card>
 
-      <div className="card flex flex-col items-center p-6 text-center">
+      <div className="card flex min-w-0 flex-col items-center p-5 text-center sm:p-6">
         <div className="mb-4 w-full text-left text-sm font-semibold text-white">Link pembayaran</div>
         {url ? (
           <>
@@ -134,12 +134,12 @@ export default function HostedForm({ navigate }: { navigate: Navigate }) {
             {qr && <img src={qr} alt="QR link" className="h-52 w-52 rounded-2xl bg-white p-3" />}
             <p className="mt-3 text-xs text-ink-400">Scan dari HP untuk membuka halaman pembayaran DANA</p>
             <div className="mt-4 text-2xl font-bold text-white">{rupiah(result?.meta?.amount)}</div>
-            <div className="mt-4 grid w-full gap-2">
+            <div className="mt-4 grid w-full min-w-0 grid-cols-1 gap-2">
               <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-dana-400 to-dana-600 px-4 py-2.5 text-sm font-semibold text-white">
                 Buka halaman DANA <ExternalLink className="h-4 w-4" />
               </a>
-              <div className="flex items-center justify-between rounded-lg bg-ink-950/60 px-3 py-2">
-                <span className="truncate font-mono text-[11px] text-ink-400">{url}</span>
+              <div className="flex min-w-0 items-center justify-between gap-2 rounded-lg bg-ink-950/60 px-3 py-2">
+                <span className="min-w-0 truncate font-mono text-[11px] text-ink-400">{url}</span>
                 <CopyButton text={url} />
               </div>
             </div>

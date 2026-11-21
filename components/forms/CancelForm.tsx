@@ -39,7 +39,7 @@ export default function CancelForm({ prefill }: { prefill?: Prefill }) {
   return (
     <Card icon={<Ban className="h-5 w-5" />} title="Cancel Transaksi" subtitle="POST /v1.0/debit/cancel.htm — untuk transaksi yang belum dibayar / perlu dibatalkan">
       <form onSubmit={submit} className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label="originalPartnerReferenceNo">
             <input className="input font-mono" value={ref} onChange={(e) => setRef(e.target.value.trim())} required />
           </Field>

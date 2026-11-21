@@ -46,7 +46,7 @@ export default function CheckoutBuilder() {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_414px]">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_414px]">
       <div className="space-y-6">
         <Card
           icon={<LayoutTemplate className="h-5 w-5" />}
@@ -82,12 +82,12 @@ export default function CheckoutBuilder() {
 
         {link && (
           <Card title="Link siap dibagikan" subtitle="Amount & item ditandatangani HMAC — tidak bisa diubah customer">
-            <div className="grid gap-5 sm:grid-cols-[auto_1fr]">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-[auto_1fr]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              {qr && <img src={qr} alt="QR checkout" className="h-36 w-36 rounded-xl bg-white p-2" />}
+              {qr && <img src={qr} alt="QR checkout" className="mx-auto h-36 w-36 rounded-xl bg-white p-2 sm:mx-0" />}
               <div className="min-w-0 space-y-3">
-                <div className="flex items-center justify-between gap-2 rounded-lg bg-ink-950/60 px-3 py-2">
-                  <span className="truncate font-mono text-[11px] text-ink-400">{link.url}</span>
+                <div className="flex min-w-0 items-center justify-between gap-2 rounded-lg bg-ink-950/60 px-3 py-2">
+                  <span className="min-w-0 truncate font-mono text-[11px] text-ink-400">{link.url}</span>
                   <CopyButton text={link.url} />
                 </div>
                 <div className="flex flex-wrap gap-2">

@@ -411,7 +411,7 @@ function InstructionPanel({
             <div className="mt-6 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5">
               <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Nomor Virtual Account</div>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-                <div className="font-mono text-2xl font-bold tracking-wider text-slate-900 sm:text-[28px]">{groupDigits(result.paymentCode)}</div>
+                <div className="whitespace-nowrap font-mono text-[22px] font-bold tracking-wide text-slate-900 min-[400px]:text-2xl sm:text-[28px] sm:tracking-wider">{groupDigits(result.paymentCode)}</div>
                 <CopyText text={result.paymentCode} />
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-dashed border-slate-200 pt-4">

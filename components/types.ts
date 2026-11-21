@@ -19,5 +19,6 @@ export interface AppConfig {
   webhookPath: string;
   storeMode: "redis" | "memory";
   authEnabled: boolean;
+  authMode: "captcha" | "basic" | "none";
   configured: { partnerId: boolean; merchantId: boolean; privateKey: boolean; publicKey: boolean };
 }

@@ -105,14 +105,14 @@ export default function MpmForm({ config, navigate }: { config: AppConfig | null
   const st = status ? STATUS_META[status] : null;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
       <Card
         icon={<QrCode className="h-5 w-5" />}
         title="QRIS MPM — Generate QR"
         subtitle="Merchant menampilkan QR, customer scan & bayar. partnerReferenceNo dibuat otomatis."
       >
         <form onSubmit={submit} className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Store ID" hint={config?.defaultStoreId ? "Default dari DANA_STORE_ID" : undefined}>
               <input className="input font-mono" value={storeId} onChange={(e) => setStoreId(e.target.value)} placeholder="storeId" />
             </Field>
@@ -143,7 +143,7 @@ export default function MpmForm({ config, navigate }: { config: AppConfig | null
       </Card>
 
       {/* QR preview */}
-      <div className="card flex flex-col items-center p-6">
+      <div className="card flex min-w-0 flex-col items-center p-5 sm:p-6">
         <div className="mb-4 flex w-full items-center justify-between">
           <span className="text-sm font-semibold text-white">Preview QRIS</span>
           {st && (
@@ -183,8 +183,8 @@ export default function MpmForm({ config, navigate }: { config: AppConfig | null
               </Button>
             </div>
             {result?.data?.qrContent && (
-              <div className="mt-3 flex w-full items-center justify-between rounded-lg bg-ink-950/60 px-3 py-2">
-                <span className="truncate font-mono text-[11px] text-ink-400">{String(result.data.qrContent).slice(0, 38)}…</span>
+              <div className="mt-3 flex w-full min-w-0 items-center justify-between gap-2 rounded-lg bg-ink-950/60 px-3 py-2">
+                <span className="min-w-0 truncate font-mono text-[11px] text-ink-400">{String(result.data.qrContent).slice(0, 38)}…</span>
                 <CopyButton text={String(result.data.qrContent)} label="qrContent" />
               </div>
             )}

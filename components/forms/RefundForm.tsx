@@ -49,7 +49,7 @@ export default function RefundForm({ prefill }: { prefill?: Prefill }) {
   return (
     <Card icon={<Undo2 className="h-5 w-5" />} title="Refund" subtitle="POST /v1.0/debit/refund.htm — partnerRefundNo dibuat otomatis">
       <form onSubmit={submit} className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label="originalPartnerReferenceNo">
             <input className="input font-mono" value={ref} onChange={(e) => setRef(e.target.value.trim())} required />
           </Field>

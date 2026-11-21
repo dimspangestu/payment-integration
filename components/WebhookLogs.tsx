@@ -83,7 +83,7 @@ export default function WebhookLogs({ config }: { config: AppConfig | null }) {
         actions={
           <div className="flex gap-2">
             <Button variant="ghost" onClick={() => setAuto(!auto)}>
-              <RefreshCw className={cn("h-4 w-4", auto && loading && "animate-spin")} /> {auto ? "Auto: on" : "Auto: off"}
+              <RefreshCw className={cn("h-4 w-4", auto && loading && "animate-spin")} /> <span className="hidden sm:inline">{auto ? "Auto: on" : "Auto: off"}</span><span className="sm:hidden">{auto ? "On" : "Off"}</span>
             </Button>
             <Button
               variant="ghost"

@@ -55,7 +55,7 @@ export default function QueryForm({ prefill }: { prefill?: Prefill }) {
     <Card icon={<Search className="h-5 w-5" />} title="Cek Status (Query Payment)" subtitle="POST /rest/v1.1/debit/status — serviceCode 47 (MPM) / 60 (CPM)">
       <form onSubmit={submit} className="space-y-4">
         <TypeToggle value={type} onChange={setType} />
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label="originalPartnerReferenceNo" hint="Maks 25 karakter untuk QRIS">
             <input className="input font-mono" value={ref} onChange={(e) => setRef(e.target.value.trim())} placeholder="MPM261120094100123456" />
           </Field>

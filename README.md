@@ -41,7 +41,8 @@ DANA_PRIVATE_KEY="$(cat private.pem)" npm run test:sign
    - `DANA_PRIVATE_KEY`: paste PEM multi-line langsung (Vercel mendukung), atau satu baris dengan `\n`, atau base64 tanpa header.
 3. **Storage → Marketplace → Upstash Redis** (gratis) → connect ke project. Env `KV_REST_API_URL`/`KV_REST_API_TOKEN` atau `UPSTASH_REDIS_REST_URL`/`TOKEN` otomatis terbaca.
    > Tanpa Redis, log webhook disimpan in-memory dan **tidak reliable di Vercel** (serverless, beda instance).
-4. Set `DASHBOARD_PASSWORD` → dashboard & API internal terlindungi Basic Auth. Webhook tetap publik.
+4. Login dashboard default pakai **captcha** (`DASHBOARD_AUTH=captcha`): halaman `/login`, tanpa username/password, sesi 12 jam (cookie HMAC). Mode lain: `basic` (DASHBOARD_USER/PASSWORD) atau `none`. Webhook & checkout customer tetap publik.
+   > Captcha hanya menahan bot, bukan membatasi siapa yang boleh masuk — cocok untuk sandbox. Untuk production pakai `basic` atau login sungguhan.
 5. Daftarkan Notification URL di dashboard DANA:
 
 ```

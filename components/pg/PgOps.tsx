@@ -80,7 +80,7 @@ export default function PgOps({ prefill }: { prefill?: Prefill }) {
         ))}
       </div>
       <form onSubmit={submit} className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label="originalPartnerReferenceNo">
             <input className="input font-mono" value={ref} onChange={(e) => setRef(e.target.value.trim())} required />
           </Field>

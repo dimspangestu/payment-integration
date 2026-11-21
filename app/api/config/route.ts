@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDanaConfig } from "@/lib/dana/config";
 import { storeMode } from "@/lib/dana/store";
+import { authMode } from "@/lib/captcha";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +20,8 @@ export async function GET() {
     defaultExternalStoreId: c.externalStoreId,
     webhookPath: c.webhookPath,
     storeMode,
-    authEnabled: Boolean(process.env.DASHBOARD_PASSWORD),
+    authMode: authMode(),
+    authEnabled: authMode() === "captcha" || (authMode() === "basic" && Boolean(process.env.DASHBOARD_PASSWORD)),
     configured: {
       partnerId: Boolean(c.partnerId),
       merchantId: Boolean(c.merchantId),

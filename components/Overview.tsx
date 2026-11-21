@@ -31,32 +31,32 @@ export default function Overview({ config, navigate }: { config: AppConfig | nul
         ["Private key", config.configured.privateKey],
         ["Public key (webhook)", config.configured.publicKey],
         ["Redis storage", config.storeMode === "redis"],
-        ["Basic auth", config.authEnabled],
+        [config.authMode === "captcha" ? "Login captcha" : config.authMode === "basic" ? "Basic auth" : "Proteksi login", config.authEnabled],
       ]
     : [];
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <Stat label="Transaksi hari ini" value={String(todays.length)} />
         <Stat label="Berhasil dibayar" value={String(paid.length)} />
-        <Stat label="Volume sukses" value={rupiah(volume)} accent />
+        <Stat label="Volume sukses" value={rupiah(volume)} accent className="col-span-2 sm:col-span-1" />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {ACTIONS.map((a) => (
             <button
               key={a.tab}
               onClick={() => navigate(a.tab)}
-              className="card group flex items-center gap-4 p-4 text-left transition hover:-translate-y-0.5 hover:border-dana-400/30"
+              className="card group relative flex min-w-0 flex-col items-start gap-3 p-3.5 text-left transition hover:-translate-y-0.5 hover:border-dana-400/30 sm:p-4"
             >
-              <div className="grid h-11 w-11 place-items-center rounded-xl bg-dana-500/15 text-dana-300 ring-1 ring-dana-400/20">{a.icon}</div>
-              <div className="flex-1">
-                <div className="text-sm font-semibold text-white">{a.title}</div>
-                <div className="text-xs text-ink-400">{a.desc}</div>
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-dana-500/15 text-dana-300 ring-1 ring-dana-400/20 sm:h-11 sm:w-11">{a.icon}</div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold leading-snug text-white">{a.title}</div>
+                <div className="truncate text-xs text-ink-400">{a.desc}</div>
               </div>
-              <ArrowRight className="h-4 w-4 text-ink-400 transition group-hover:translate-x-0.5 group-hover:text-dana-300" />
+              <ArrowRight className="absolute right-3.5 top-4 hidden h-4 w-4 text-ink-400 transition group-hover:translate-x-0.5 group-hover:text-dana-300 sm:block" />
             </button>
           ))}
         </div>
@@ -84,12 +84,12 @@ export default function Overview({ config, navigate }: { config: AppConfig | nul
   );
 }
 
-function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function Stat({ label, value, accent, className }: { label: string; value: string; accent?: boolean; className?: string }) {
   return (
-    <div className="card relative overflow-hidden p-5">
+    <div className={`card relative overflow-hidden p-4 sm:p-5 ${className ?? ""}`}>
       {accent && <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-dana-500/20 blur-2xl" />}
-      <div className="text-xs uppercase tracking-wider text-ink-400">{label}</div>
-      <div className="mt-2 text-2xl font-bold tracking-tight text-white">{value}</div>
+      <div className="truncate text-[11px] uppercase tracking-wider text-ink-400 sm:text-xs">{label}</div>
+      <div className="mt-1.5 truncate text-xl font-bold tracking-tight text-white sm:mt-2 sm:text-2xl">{value}</div>
     </div>
   );
 }

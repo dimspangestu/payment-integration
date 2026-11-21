@@ -86,7 +86,7 @@ export default function CpmForm({ config, navigate }: { config: AppConfig | null
               </Button>
             </div>
           </Field>
-          <div className="grid gap-4 md:grid-cols-[1fr_180px]">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_180px]">
             <Field label="Amount">
               <AmountInput value={amount} onChange={setAmount} />
               <QuickAmounts onPick={setAmount} />

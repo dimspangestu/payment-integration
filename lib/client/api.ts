@@ -20,6 +20,9 @@ export async function postApi(path: string, body: unknown): Promise<ApiResult> {
       body: JSON.stringify(body),
     });
     const json = await res.json().catch(() => ({}));
+    if (res.status === 401 && json?.responseCode === "UNAUTHORIZED") {
+      window.location.href = `/login?next=${encodeURIComponent(location.pathname)}${location.hash}`;
+    }
     return {
       ok: Boolean(json.ok),
       responseCode: json.responseCode ?? String(res.status),

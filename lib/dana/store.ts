@@ -95,3 +95,23 @@ export async function getTxnStatus(ref: string): Promise<TxnStatus | null> {
   }
   return mem.txns.get(ref) ?? null;
 }
+
+/**
+ * Tandai key sekali pakai (mis. nonce captcha). true = baru pertama kali, false = sudah pernah dipakai.
+ * Redis: SET NX EX (atomik). Memory: Map dengan waktu kedaluwarsa.
+ */
+const g2 = globalThis as unknown as { __danaOnce?: Map<string, number> };
+const onceMem: Map<string, number> = (g2.__danaOnce ??= new Map());
+
+export async function consumeOnce(key: string, ttlSeconds: number): Promise<boolean> {
+  if (storeMode === "redis") {
+    const r = await redis<string | null>(["SET", `dana:once:${key}`, "1", "NX", "EX", ttlSeconds]);
+    return r === "OK";
+  }
+  const now = Date.now();
+  if (onceMem.size > 5000) for (const [k, exp] of onceMem) if (exp < now) onceMem.delete(k);
+  const exp = onceMem.get(key);
+  if (exp && exp > now) return false;
+  onceMem.set(key, now + ttlSeconds * 1000);
+  return true;
+}
