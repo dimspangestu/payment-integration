@@ -3,7 +3,7 @@
 export interface HistoryItem {
   partnerReferenceNo: string;
   referenceNo?: string;
-  type: "MPM" | "CPM" | "REFUND" | "CANCEL";
+  type: "MPM" | "CPM" | "PG" | "REFUND" | "CANCEL";
   amount?: string;
   createdAt: string;
   status?: string;

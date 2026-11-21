@@ -50,6 +50,29 @@ https://<project>.vercel.app/v1.0/debit/notify
 
 URL ini di-rewrite ke `/api/dana/notify` (lihat `next.config.ts`). Jadi **ya, webhook jalan di Vercel** — route handler Node.js biasa, respons `{"responseCode":"2005600","responseMessage":"Successful"}` dalam batas timeout 8 detik DANA.
 
+## Payment Gateway (Gapura)
+
+| Mode | Cara kerja | Menu |
+|---|---|---|
+| **Hosted** | `scenario: REDIRECT` → customer diarahkan ke `webRedirectUrl` (cashier DANA) | Hosted Checkout |
+| **Custom** | `scenario: API` + `payOptionDetails` → nomor VA / QRIS tampil di halaman `/checkout` milik merchant | Custom Checkout |
+
+- Metode bayar di `/checkout` diambil dari **Consult Pay**. Di sandbox ada fallback ke whitelist SDK (Saldo DANA, QRIS, VA BRI/CIMB/BSI/BTPN/Panin, Kartu).
+- Link checkout ditandatangani **HMAC** (`CHECKOUT_SECRET`), jadi amount & item tidak bisa diubah customer.
+- `CHECKOUT_PUBLIC=true` → `/checkout` & `/api/checkout/*` bisa dibuka tanpa password dashboard. Endpoint admin (`/api/pg/*` cancel/refund) tetap terproteksi.
+- Status: webhook Finish Notify yang sama (`/v1.0/debit/notify`) + Query Payment (serviceCode 54) sebagai fallback.
+- Aturan sandbox dari SDK resmi: `validUpTo` maks 30 menit, amount maks Rp10.000.000, kartu/e-wallet wajib `phoneNumber`, QRIS wajib `externalStoreId`.
+
+```
+lib/dana/payment-gateway/index.ts    # consultPay, createHostedOrder, createCustomOrder, queryPg, cancelPg, refundPg
+lib/dana/payment-gateway/methods.ts  # katalog payMethod/payOption + label
+lib/checkout-token.ts                # sign/verify link checkout
+app/api/pg/*                         # admin: hosted, query, cancel, refund, checkout-link
+app/api/checkout/*                   # publik: methods, order, status
+app/checkout/ (+ /result)            # halaman checkout customer
+components/checkout/*, components/pg/*
+```
+
 ## Webhook
 
 - Signature diverifikasi dengan public key DANA. Sandbox: kalau `DANA_PUBLIC_KEY` kosong, otomatis memakai sandbox public key dari SDK resmi DANA.

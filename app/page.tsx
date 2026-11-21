@@ -3,6 +3,8 @@
 import {
   Ban,
   CreditCard,
+  Globe,
+  LayoutTemplate,
   History as HistoryIcon,
   LayoutDashboard,
   Menu,
@@ -22,7 +24,9 @@ import QueryForm from "@/components/forms/QueryForm";
 import RefundForm from "@/components/forms/RefundForm";
 import History from "@/components/History";
 import Overview from "@/components/Overview";
-import PaymentGatewaySoon from "@/components/PaymentGatewaySoon";
+import CheckoutBuilder from "@/components/pg/CheckoutBuilder";
+import HostedForm from "@/components/pg/HostedForm";
+import PgOps from "@/components/pg/PgOps";
 import WebhookLogs from "@/components/WebhookLogs";
 import { Badge, cn } from "@/components/ui";
 import type { AppConfig, Prefill, TabKey } from "@/components/types";
@@ -46,7 +50,14 @@ const NAV: { group: string; items: { key: TabKey; label: string; icon: React.Rea
       { key: "history", label: "Riwayat", icon: <HistoryIcon className="h-4 w-4" /> },
     ],
   },
-  { group: "Payment Gateway", items: [{ key: "pg", label: "Gapura", icon: <CreditCard className="h-4 w-4" />, soon: true }] },
+  {
+    group: "Payment Gateway",
+    items: [
+      { key: "pg-hosted", label: "Hosted Checkout", icon: <Globe className="h-4 w-4" /> },
+      { key: "pg-custom", label: "Custom Checkout", icon: <LayoutTemplate className="h-4 w-4" /> },
+      { key: "pg-ops", label: "Query · Cancel · Refund", icon: <CreditCard className="h-4 w-4" /> },
+    ],
+  },
 ];
 
 const TITLES: Record<TabKey, string> = {
@@ -58,7 +69,9 @@ const TITLES: Record<TabKey, string> = {
   refund: "Refund",
   webhooks: "Webhook",
   history: "Riwayat",
-  pg: "Payment Gateway",
+  "pg-hosted": "Hosted Checkout",
+  "pg-custom": "Custom Checkout",
+  "pg-ops": "Payment Gateway Ops",
 };
 
 export default function Home() {
@@ -89,7 +102,7 @@ export default function Home() {
         </div>
         <div>
           <div className="text-[15px] font-bold tracking-tight text-white">DANA Console</div>
-          <div className="text-xs text-ink-400">QRIS Acquirer</div>
+          <div className="text-xs text-ink-400">QRIS · Payment Gateway</div>
         </div>
       </div>
       <div className="flex-1 space-y-5 overflow-y-auto px-3">
@@ -176,7 +189,9 @@ export default function Home() {
           {tab === "refund" && <RefundForm prefill={prefill} />}
           {tab === "webhooks" && <WebhookLogs config={config} />}
           {tab === "history" && <History navigate={navigate} />}
-          {tab === "pg" && <PaymentGatewaySoon />}
+          {tab === "pg-hosted" && <HostedForm navigate={navigate} />}
+          {tab === "pg-custom" && <CheckoutBuilder />}
+          {tab === "pg-ops" && <PgOps prefill={prefill} />}
         </div>
       </main>
     </div>

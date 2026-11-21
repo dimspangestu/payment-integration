@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Ban, CheckCircle2, QrCode, ScanLine, Search, Undo2, Webhook, XCircle } from "lucide-react";
+import { ArrowRight, Ban, CheckCircle2, Globe, LayoutTemplate, QrCode, ScanLine, Search, Undo2, Webhook, XCircle } from "lucide-react";
 import { rupiah } from "@/lib/client/api";
 import History, { useHistory } from "./History";
 import { Badge, Card } from "./ui";
@@ -13,12 +13,14 @@ const ACTIONS: { tab: TabKey; title: string; desc: string; icon: React.ReactNode
   { tab: "cancel", title: "Cancel", desc: "Batalkan transaksi", icon: <Ban className="h-5 w-5" /> },
   { tab: "refund", title: "Refund", desc: "Full / partial", icon: <Undo2 className="h-5 w-5" /> },
   { tab: "webhooks", title: "Webhook", desc: "Finish notify log", icon: <Webhook className="h-5 w-5" /> },
+  { tab: "pg-hosted", title: "Hosted Checkout", desc: "PG · redirect ke DANA", icon: <Globe className="h-5 w-5" /> },
+  { tab: "pg-custom", title: "Custom Checkout", desc: "PG · halaman sendiri", icon: <LayoutTemplate className="h-5 w-5" /> },
 ];
 
 export default function Overview({ config, navigate }: { config: AppConfig | null; navigate: Navigate }) {
   const history = useHistory();
   const today = new Date().toDateString();
-  const todays = history.filter((h) => new Date(h.createdAt).toDateString() === today && (h.type === "MPM" || h.type === "CPM"));
+  const todays = history.filter((h) => new Date(h.createdAt).toDateString() === today && (h.type === "MPM" || h.type === "CPM" || h.type === "PG"));
   const paid = todays.filter((h) => h.status === "00");
   const volume = paid.reduce((s, h) => s + Number(h.amount || 0), 0);
 

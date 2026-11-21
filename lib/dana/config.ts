@@ -41,6 +41,13 @@ export function getDanaConfig() {
     cpmDeviceId: env("DANA_CPM_DEVICE_ID", "WEB-DASHBOARD"),
     notifyUrl: env("DANA_NOTIFY_URL"),
 
+    // Payment Gateway
+    pgMcc: env("DANA_PG_MCC", "5732") || "5732",
+    appUrl: env("APP_URL").replace(/\/+$/, ""),
+    checkoutSecret: env("CHECKOUT_SECRET"),
+    checkoutPublic: env("CHECKOUT_PUBLIC") === "true",
+    merchantName: env("MERCHANT_NAME", "Toko Demo") || "Toko Demo",
+
     // Refund
     refundActorId: env("DANA_REFUND_ACTOR_ID", "DASHBOARD"),
     refundActorType: env("DANA_REFUND_ACTOR_TYPE", "BACK_OFFICE"),
@@ -75,6 +82,7 @@ export const DANA_PATHS = {
   },
   // Disiapkan untuk modul Payment Gateway (Gapura)
   paymentGateway: {
+    consultPay: "/v1.0/payment-gateway/consult-pay.htm",
     createOrder: "/payment-gateway/v1.0/debit/payment-host-to-host.htm",
     query: "/payment-gateway/v1.0/debit/status.htm",
     cancel: "/payment-gateway/v1.0/debit/cancel.htm",

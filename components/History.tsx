@@ -62,7 +62,7 @@ export default function History({ navigate, compact }: { navigate: Navigate; com
                       {h.note && <div className="text-xs text-ink-400">{h.note}</div>}
                     </td>
                     <td className="px-4 py-2.5">
-                      <Badge tone={h.type === "REFUND" ? "warn" : "info"}>{h.type}</Badge>
+                      <Badge tone={h.type === "REFUND" ? "warn" : h.type === "PG" ? "ok" : "info"}>{h.type}</Badge>
                     </td>
                     <td className="px-4 py-2.5 text-ink-300">{h.amount ? rupiah(h.amount) : "—"}</td>
                     <td className="px-4 py-2.5">
@@ -86,6 +86,13 @@ export default function History({ navigate, compact }: { navigate: Navigate; com
                           </IconBtn>
                           <IconBtn title="Refund" onClick={() => navigate("refund", { ref: h.partnerReferenceNo, referenceNo: h.referenceNo, amount: h.amount, type: qrisType })}>
                             <Undo2 className="h-4 w-4" />
+                          </IconBtn>
+                        </div>
+                      )}
+                      {h.type === "PG" && h.ok && (
+                        <div className="flex justify-end gap-1">
+                          <IconBtn title="Query / Cancel / Refund" onClick={() => navigate("pg-ops", { ref: h.partnerReferenceNo, referenceNo: h.referenceNo, amount: h.amount })}>
+                            <Search className="h-4 w-4" />
                           </IconBtn>
                         </div>
                       )}

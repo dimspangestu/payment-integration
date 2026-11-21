@@ -1,4 +1,4 @@
-export type TabKey = "overview" | "mpm" | "cpm" | "query" | "cancel" | "refund" | "webhooks" | "history" | "pg";
+export type TabKey = "overview" | "mpm" | "cpm" | "query" | "cancel" | "refund" | "webhooks" | "history" | "pg-hosted" | "pg-custom" | "pg-ops";
 
 export interface Prefill {
   ref?: string;

@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 /**
  * Next.js 16 Proxy (pengganti middleware) — runtime Node.js.
- * Basic Auth untuk dashboard + API internal.
- * Webhook DANA (/v1.0/debit/notify & /api/dana/notify) DIKECUALIKAN.
- * Aktif hanya jika DASHBOARD_PASSWORD di-set.
+ * Basic Auth untuk dashboard + API internal (aktif jika DASHBOARD_PASSWORD di-set).
+ * Selalu publik : webhook DANA (/v1.0/debit/notify & /api/dana/notify).
+ * Publik opsional: halaman checkout customer (/checkout, /api/checkout/*) jika CHECKOUT_PUBLIC=true.
+ *   Endpoint admin (/api/pg/*, /api/qris/*: cancel, refund, dll) TETAP terproteksi.
  */
 
 function safeEqual(a: string, b: string) {
@@ -14,9 +15,14 @@ function safeEqual(a: string, b: string) {
   return ab.length === bb.length && timingSafeEqual(ab, bb);
 }
 
+function isPublicCheckout(pathname: string) {
+  return pathname === "/checkout" || pathname.startsWith("/checkout/") || pathname.startsWith("/api/checkout/");
+}
+
 export function proxy(req: NextRequest) {
   const password = process.env.DASHBOARD_PASSWORD;
   if (!password) return NextResponse.next();
+  if (process.env.CHECKOUT_PUBLIC === "true" && isPublicCheckout(req.nextUrl.pathname)) return NextResponse.next();
 
   const user = process.env.DASHBOARD_USER || "admin";
   const auth = req.headers.get("authorization");
