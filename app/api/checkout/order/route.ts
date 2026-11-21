@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { baseUrl, notifyUrlFor, verifyCheckout } from "@/lib/checkout-token";
 import { createCustomOrder } from "@/lib/dana/payment-gateway";
-import { DanaConfigError } from "@/lib/dana/config";
+import { DanaConfigError, getDanaConfig } from "@/lib/dana/config";
 import { clientIp, readJson } from "@/lib/dana/route-helpers";
 import { saveTxnStatus } from "@/lib/dana/store";
 import { DanaInputError, generateRef } from "@/lib/dana/utils";
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       payMethod: b.payMethod as string,
       payOption: b.payOption as string,
       phoneNumber: b.phoneNumber as string,
-      validMinutes: 30,
+      validMinutes: 20,
       returnUrl: `${baseUrl(req)}/checkout/result?ref=${partnerReferenceNo}`,
       notifyUrl: notifyUrlFor(req),
       clientIp: clientIp(req),
@@ -45,6 +45,12 @@ export async function POST(req: Request) {
       }).catch(() => {});
     }
 
+    if (!r.ok) {
+      // Muncul di Vercel → Deployments → Logs (Functions) untuk investigasi
+      console.warn("[checkout:order] DANA menolak", r.responseCode, r.responseMessage, JSON.stringify({ request: r.request?.body, response: r.data }));
+    }
+    const cfg = getDanaConfig();
+
     // Response publik: hanya yang dibutuhkan customer (tanpa request/debug)
     return NextResponse.json({
       ok: r.ok,
@@ -57,6 +63,8 @@ export async function POST(req: Request) {
       validUpTo: r.meta?.validUpTo,
       amount: order.amount,
       method: r.meta?.method,
+      // Sandbox + DANA_DEBUG=true: tampilkan request/response saat gagal
+      debug: !r.ok && cfg.isSandbox && cfg.debug ? { request: r.request?.body, response: r.data } : undefined,
     });
   } catch (e) {
     if (e instanceof DanaInputError) return NextResponse.json({ ok: false, responseCode: "INPUT_ERROR", responseMessage: e.message }, { status: 400 });

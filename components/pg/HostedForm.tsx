@@ -21,7 +21,7 @@ export default function HostedForm({ navigate }: { navigate: Navigate }) {
   const [title, setTitle] = useState("Pembayaran pesanan");
   const [amount, setAmount] = useState("");
   const [items, setItems] = useState<ItemRow[]>([]);
-  const [validMinutes, setValidMinutes] = useState("30");
+  const [validMinutes, setValidMinutes] = useState("15");
   const [disabled, setDisabled] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ApiResult | null>(null);
@@ -79,7 +79,7 @@ export default function HostedForm({ navigate }: { navigate: Navigate }) {
             </Field>
           )}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Berlaku (menit)" hint="Sandbox maks 30 menit">
+            <Field label="Berlaku (menit)" hint="Sandbox maks 25 menit (batas DANA 30)">
               <input className="input" inputMode="numeric" value={validMinutes} onChange={(e) => setValidMinutes(e.target.value.replace(/\D/g, ""))} />
             </Field>
             <Field label="Sembunyikan metode" optional>

@@ -13,7 +13,8 @@ import { PG_STATUS, SANDBOX_ALLOWED_PAY_METHODS, describeMethod, payOptionAllowe
  */
 
 const SANDBOX_MAX_AMOUNT = 10_000_000;
-const SANDBOX_MAX_VALID_MINUTES = 30;
+// SDK: sandbox maks 30 menit. Pakai 25 agar tidak lewat batas karena selisih jam server.
+const SANDBOX_MAX_VALID_MINUTES = 25;
 
 export interface Goods {
   name: string;
@@ -47,13 +48,20 @@ export interface CustomOrderInput extends OrderInput {
   phoneNumber?: string;
 }
 
+/** IP valid untuk envInfo.clientIp (maks 32 char di SDK → IPv6 panjang dibuang) */
+function safeClientIp(ip?: string) {
+  const v = (ip || "").trim();
+  if (!v || v.length > 32) return undefined;
+  return /^[0-9a-fA-F:.]+$/.test(v) ? v : undefined;
+}
+
+/** Hanya field yang dipakai fixture SDK + field opsional yang aman */
 function envInfo(clientIp?: string) {
   return clean({
     sourcePlatform: "IPG",
     terminalType: "SYSTEM",
     orderTerminalType: "WEB",
-    clientIp: clientIp || undefined,
-    websiteLanguage: "id_ID",
+    clientIp: safeClientIp(clientIp),
   });
 }
 
@@ -69,6 +77,7 @@ function validateAmount(amount: string | number) {
 function validUpTo(minutes?: number) {
   const cfg = getDanaConfig();
   let m = Math.round(Number(minutes) || 15);
+  // detik dibulatkan ke bawah lewat jakartaTimestampPlus; margin ekstra ada di SANDBOX_MAX_VALID_MINUTES
   if (m < 1) m = 1;
   if (cfg.isSandbox && m > SANDBOX_MAX_VALID_MINUTES) m = SANDBOX_MAX_VALID_MINUTES;
   if (m > 7 * 24 * 60) m = 7 * 24 * 60;
@@ -78,14 +87,17 @@ function validUpTo(minutes?: number) {
 function buildOrder(input: OrderInput, scenario: "API" | "REDIRECT") {
   const goods = (input.goods ?? [])
     .filter((g) => g && g.name)
-    .map((g, i) => ({
-      name: g.name.slice(0, 64),
-      merchantGoodsId: `G${i + 1}`,
-      description: g.name.slice(0, 64),
-      category: g.category || "GENERAL",
-      price: money(g.price),
-      quantity: String(g.quantity ?? 1),
-    }));
+    .map((g, i) => {
+      const name = String(g.name).replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 64);
+      return {
+        name,
+        merchantGoodsId: `G${i + 1}`,
+        description: name,
+        category: (g.category || "GENERAL").slice(0, 64),
+        price: money(g.price),
+        quantity: String(Math.max(1, Math.round(Number(g.quantity ?? 1)))),
+      };
+    });
   const buyer =
     input.buyerId || input.buyerName
       ? clean({
@@ -100,7 +112,6 @@ function buildOrder(input: OrderInput, scenario: "API" | "REDIRECT") {
     scenario,
     buyer,
     goods: goods.length ? goods : undefined,
-    createdTime: jakartaTimestampPlus(0),
   });
 }
 

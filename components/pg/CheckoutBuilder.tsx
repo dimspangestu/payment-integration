@@ -66,7 +66,7 @@ export default function CheckoutBuilder() {
                 <QuickAmounts onPick={setAmount} />
               </Field>
             )}
-            <Field label="Link berlaku" hint="Order DANA tetap maks 30 menit setelah customer memilih metode (sandbox)">
+            <Field label="Link berlaku" hint="Setelah customer memilih metode, order DANA berlaku 20 menit">
               <select className="input" value={ttl} onChange={(e) => setTtl(e.target.value)}>
                 <option value="60">1 jam</option>
                 <option value="1440">1 hari</option>

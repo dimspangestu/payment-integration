@@ -26,6 +26,7 @@ export async function POST(req: Request) {
       notifyUrl: notifyUrlFor(req),
       clientIp: clientIp(req),
     });
+    if (!result.ok) console.warn("[pg:hosted] DANA menolak", result.responseCode, result.responseMessage, JSON.stringify({ request: result.request?.body, response: result.data }));
     if (result.ok && result.meta?.partnerReferenceNo) {
       await saveTxnStatus({
         partnerReferenceNo: String(result.meta.partnerReferenceNo),

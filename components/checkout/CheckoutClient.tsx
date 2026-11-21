@@ -42,6 +42,7 @@ interface OrderResult {
   validUpTo?: string;
   amount?: string;
   method?: PayMethodOption;
+  debug?: { request?: unknown; response?: unknown };
 }
 
 const GROUP_ICON: Record<MethodGroup, React.ReactNode> = {
@@ -77,6 +78,7 @@ export default function CheckoutClient({
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debug, setDebug] = useState<OrderResult["debug"] | null>(null);
   const [result, setResult] = useState<OrderResult | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -104,6 +106,7 @@ export default function CheckoutClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ t: token, payMethod: selected.payMethod, payOption: selected.payOption, phoneNumber: phone || undefined }),
       }).then((x) => x.json());
+      setDebug(r.ok ? null : r.debug ?? null);
       if (!r.ok) {
         setError(`${r.responseMessage || "Pembayaran gagal dibuat"}${r.responseCode && !/ERROR$/.test(r.responseCode) ? ` (${r.responseCode})` : ""}`);
       } else {
@@ -305,6 +308,12 @@ export default function CheckoutClient({
                 <div className="mt-5 flex items-start gap-2 rounded-2xl bg-rose-50 p-4 text-sm text-rose-700">
                   <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" /> {error}
                 </div>
+              )}
+              {error && debug && (
+                <details className="mt-2 rounded-2xl bg-slate-50 p-3 text-xs text-slate-600">
+                  <summary className="cursor-pointer font-semibold">Detail request (sandbox debug)</summary>
+                  <pre className="mt-2 max-h-72 overflow-auto whitespace-pre-wrap break-all font-mono text-[11px]">{JSON.stringify(debug, null, 2)}</pre>
+                </details>
               )}
 
               <button
