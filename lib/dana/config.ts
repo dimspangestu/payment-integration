@@ -43,6 +43,10 @@ export function getDanaConfig() {
 
     // Payment Gateway
     pgMcc: env("DANA_PG_MCC", "5732") || "5732",
+    // Widget (fixture SDK: 51051000100000000001)
+    widgetProductCode: env("DANA_WIDGET_PRODUCT_CODE", "51051000100000000001") || "51051000100000000001",
+    // Disbursement: nomor akun DANA merchant (628xx) untuk Transfer ke Bank
+    disbursementCustomerNumber: env("DANA_DISBURSEMENT_CUSTOMER_NUMBER"),
     appUrl: env("APP_URL").replace(/\/+$/, ""),
     checkoutSecret: env("CHECKOUT_SECRET"),
     checkoutPublic: env("CHECKOUT_PUBLIC") === "true",
@@ -60,6 +64,36 @@ export function getDanaConfig() {
 }
 
 export type DanaConfig = ReturnType<typeof getDanaConfig>;
+
+/* ------------------------------------------------------------------ */
+/* Kredensial per modul                                                 */
+/* Di sandbox DANA, tiap produk sering punya merchant/client berbeda.   */
+/* DANA_<MODUL>_PARTNER_ID / _MERCHANT_ID / _PRIVATE_KEY / _CLIENT_SECRET */
+/* menimpa nilai global; kalau kosong → pakai DANA_PARTNER_ID, dst.     */
+/* ------------------------------------------------------------------ */
+export type DanaModule = "QRIS" | "PG" | "DISBURSEMENT" | "WIDGET";
+
+export function getModuleCreds(module: DanaModule = "QRIS") {
+  const cfg = getDanaConfig();
+  const pick = (k: string, fallback: string) => env(`DANA_${module}_${k}`) || fallback;
+  return {
+    module,
+    partnerId: pick("PARTNER_ID", cfg.partnerId),
+    merchantId: pick("MERCHANT_ID", cfg.merchantId),
+    privateKey: pick("PRIVATE_KEY", cfg.privateKey),
+    clientSecret: pick("CLIENT_SECRET", env("DANA_CLIENT_SECRET")),
+  };
+}
+
+export type ModuleCreds = ReturnType<typeof getModuleCreds>;
+
+export function assertModuleCreds(c: ModuleCreds, opts: { merchant?: boolean } = {}) {
+  const missing: string[] = [];
+  if (!c.partnerId) missing.push(`DANA_${c.module}_PARTNER_ID / DANA_PARTNER_ID`);
+  if (!c.privateKey) missing.push(`DANA_${c.module}_PRIVATE_KEY / DANA_PRIVATE_KEY`);
+  if (opts.merchant !== false && !c.merchantId) missing.push(`DANA_${c.module}_MERCHANT_ID / DANA_MERCHANT_ID`);
+  if (missing.length) throw new DanaConfigError(`Environment belum lengkap: ${missing.join(", ")}`);
+}
 
 export function assertCoreConfig(cfg: DanaConfig) {
   const missing: string[] = [];
@@ -88,7 +122,26 @@ export const DANA_PATHS = {
     cancel: "/payment-gateway/v1.0/debit/cancel.htm",
     refund: "/payment-gateway/v1.0/debit/refund.htm",
   },
-  notify: "/v1.0/debit/notify",
+  disbursement: {
+    danaAccountInquiry: "/rest/v1.0/emoney/account-inquiry",
+    transferToDana: "/rest/v1.0/emoney/topup",
+    transferToDanaStatus: "/rest/v1.0/emoney/topup-status",
+    bankAccountInquiry: "/v1.0/emoney/bank-account-inquiry.htm",
+    transferToBank: "/v1.0/emoney/transfer-bank.htm",
+    transferToBankStatus: "/v1.0/emoney/transfer-bank-status.htm",
+  },
+  widget: {
+    applyToken: "/v1.0/access-token/b2b2c.htm",
+    applyOtt: "/rest/v1.1/qr/apply-ott",
+    payment: "/rest/redirection/v1.0/debit/payment-host-to-host",
+    query: "/rest/v1.1/debit/status",
+    cancel: "/v1.0/debit/cancel.htm",
+    refund: "/v1.0/debit/refund.htm",
+    balance: "/v1.0/balance-inquiry.htm",
+    unbinding: "/v1.0/registration-account-unbinding.htm",
+    userProfile: "/dana/member/query/queryUserProfile.htm",
+  },
+    notify: "/v1.0/debit/notify",
 } as const;
 
 /** SNAP service codes */
@@ -96,4 +149,7 @@ export const SERVICE_CODE = {
   QRIS_MPM: "47",
   QRIS_CPM: "60",
   PAYMENT_GATEWAY: "54",
+  WIDGET: "54",
+  TRANSFER_TO_DANA: "38",
+  TRANSFER_TO_BANK: "00",
 } as const;

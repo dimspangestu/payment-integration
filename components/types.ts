@@ -1,4 +1,4 @@
-export type TabKey = "overview" | "mpm" | "cpm" | "query" | "cancel" | "refund" | "webhooks" | "history" | "pg-hosted" | "pg-custom" | "pg-ops";
+export type TabKey = "overview" | "mpm" | "cpm" | "query" | "cancel" | "refund" | "webhooks" | "history" | "pg-hosted" | "pg-custom" | "pg-ops" | "disbursement" | "widget";
 
 export interface Prefill {
   ref?: string;
@@ -20,5 +20,7 @@ export interface AppConfig {
   storeMode: "redis" | "memory";
   authEnabled: boolean;
   authMode: "captcha" | "basic" | "none";
+  disbursementCustomerNumber: string;
+  modules: Record<"QRIS" | "PG" | "DISBURSEMENT" | "WIDGET", { partnerId: string; merchantId: string; ready: boolean; clientSecret: boolean }>;
   configured: { partnerId: boolean; merchantId: boolean; privateKey: boolean; publicKey: boolean };
 }

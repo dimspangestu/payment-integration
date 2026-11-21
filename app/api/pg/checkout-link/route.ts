@@ -28,6 +28,7 @@ export async function POST(req: Request) {
         title: String(b.title || "Pembayaran").slice(0, 64),
         goods: goods.length ? goods : undefined,
         buyerName: (b.buyerName as string) || undefined,
+        storeId: typeof b.storeId === "string" && b.storeId.trim() ? b.storeId.trim().slice(0, 64) : undefined,
       },
       Number(b.linkTtlMinutes) || 60 * 24
     );

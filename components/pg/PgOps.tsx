@@ -10,7 +10,7 @@ import type { Prefill } from "../types";
 
 type Op = "query" | "cancel" | "refund";
 
-export default function PgOps({ prefill }: { prefill?: Prefill }) {
+export default function PgOps({ prefill, api = "pg" }: { prefill?: Prefill; api?: "pg" | "widget" }) {
   const [op, setOp] = useState<Op>("query");
   const [ref, setRef] = useState("");
   const [referenceNo, setReferenceNo] = useState("");
@@ -32,10 +32,10 @@ export default function PgOps({ prefill }: { prefill?: Prefill }) {
     const base = { originalPartnerReferenceNo: ref, originalReferenceNo: referenceNo || undefined };
     const r =
       op === "query"
-        ? await postApi("/api/pg/query", base)
+        ? await postApi(`/api/${api}/query`, base)
         : op === "cancel"
-          ? await postApi("/api/pg/cancel", { ...base, reason })
-          : await postApi("/api/pg/refund", { ...base, amount, reason });
+          ? await postApi(`/api/${api}/cancel`, { ...base, reason })
+          : await postApi(`/api/${api}/refund`, { ...base, amount, reason });
     setResult(r);
     setLoading(false);
     if (op === "query" && r.ok && r.data?.latestTransactionStatus) updateHistory(ref, { status: r.data.latestTransactionStatus });
@@ -48,7 +48,7 @@ export default function PgOps({ prefill }: { prefill?: Prefill }) {
         createdAt: new Date().toISOString(),
         ok: r.ok,
         responseCode: r.responseCode,
-        note: `refund PG ${ref}`,
+        note: `refund ${api === "widget" ? "Widget" : "PG"} ${ref}`,
       });
     }
   }
@@ -63,7 +63,11 @@ export default function PgOps({ prefill }: { prefill?: Prefill }) {
   ];
 
   return (
-    <Card icon={<Search className="h-5 w-5" />} title="Payment Gateway · Query / Cancel / Refund" subtitle="serviceCode 54 · berlaku untuk order Hosted maupun Custom">
+    <Card
+      icon={<Search className="h-5 w-5" />}
+      title={api === "widget" ? "Widget · Query / Cancel / Refund" : "Payment Gateway · Query / Cancel / Refund"}
+      subtitle={api === "widget" ? "serviceCode 54 · order Widget Payment (WGT…)" : "serviceCode 54 · berlaku untuk order Hosted maupun Custom"}
+    >
       <div className="mb-5 inline-flex rounded-xl border border-ink-700 bg-ink-950/50 p-1">
         {TABS.map((t) => (
           <button

@@ -5,6 +5,8 @@ import {
   CreditCard,
   Globe,
   LayoutTemplate,
+  ArrowDownToLine,
+  AppWindow,
   LogOut,
   History as HistoryIcon,
   LayoutDashboard,
@@ -26,6 +28,8 @@ import RefundForm from "@/components/forms/RefundForm";
 import History from "@/components/History";
 import Overview from "@/components/Overview";
 import CheckoutBuilder from "@/components/pg/CheckoutBuilder";
+import DisbursementPanel from "@/components/disbursement/DisbursementPanel";
+import WidgetPanel from "@/components/widget/WidgetPanel";
 import HostedForm from "@/components/pg/HostedForm";
 import PgOps from "@/components/pg/PgOps";
 import WebhookLogs from "@/components/WebhookLogs";
@@ -59,6 +63,13 @@ const NAV: { group: string; items: { key: TabKey; label: string; icon: React.Rea
       { key: "pg-ops", label: "Query · Cancel · Refund", icon: <CreditCard className="h-4 w-4" /> },
     ],
   },
+  {
+    group: "Lainnya",
+    items: [
+      { key: "disbursement", label: "Disbursement", icon: <ArrowDownToLine className="h-4 w-4" /> },
+      { key: "widget", label: "Widget", icon: <AppWindow className="h-4 w-4" /> },
+    ],
+  },
 ];
 
 const TITLES: Record<TabKey, string> = {
@@ -73,6 +84,8 @@ const TITLES: Record<TabKey, string> = {
   "pg-hosted": "Hosted Checkout",
   "pg-custom": "Custom Checkout",
   "pg-ops": "Payment Gateway Ops",
+  disbursement: "Disbursement",
+  widget: "Widget",
 };
 
 export default function Home() {
@@ -114,16 +127,16 @@ export default function Home() {
 
   const sidebar = (
     <nav className="flex h-full flex-col overflow-y-auto overscroll-contain">
-      <div className="flex shrink-0 items-center gap-3 px-5 pb-4 pt-5">
+      <div className="flex shrink-0 items-center gap-3 px-5 pb-4 pt-5 [@media(max-height:760px)]:pb-3 [@media(max-height:760px)]:pt-4">
         <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-dana-400 to-dana-600 shadow-lg shadow-dana-500/30">
           <QrCode className="h-5 w-5 text-white" />
         </div>
         <div>
           <div className="text-[15px] font-bold tracking-tight text-white">DANA Console</div>
-          <div className="text-xs text-ink-400">QRIS · Payment Gateway</div>
+          <div className="text-xs text-ink-400">Payment Console</div>
         </div>
       </div>
-      <div className="flex-1 space-y-4 px-3">
+      <div className="flex-1 space-y-4 px-3 [@media(max-height:760px)]:space-y-2.5">
         {NAV.map((g) => (
           <div key={g.group || "root"}>
             {g.group && <div className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-widest text-ink-400/70">{g.group}</div>}
@@ -133,7 +146,7 @@ export default function Home() {
                   <button
                     onClick={() => navigate(it.key)}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm transition [@media(min-height:860px)]:py-2.5",
+                      "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm transition [@media(max-height:760px)]:py-1.5 [@media(min-height:860px)]:py-2.5",
                       tab === it.key
                         ? "bg-dana-500/15 font-semibold text-white ring-1 ring-inset ring-dana-400/25"
                         : "text-ink-300 hover:bg-ink-800/60 hover:text-white"
@@ -150,7 +163,7 @@ export default function Home() {
         ))}
       </div>
       {/* ikut ter-scroll bersama menu, jadi tidak menutupi item di layar laptop pendek */}
-      <div className="m-3 mt-5 shrink-0 rounded-xl border border-ink-700/60 bg-ink-900/60 p-3 text-xs text-ink-400">
+      <div className="m-3 mt-5 shrink-0 rounded-xl border border-ink-700/60 bg-ink-900/60 p-3 text-xs text-ink-400 [@media(max-height:760px)]:hidden">
         <div className="flex items-center justify-between">
           <span>Environment</span>
           <Badge tone={config?.env === "production" ? "bad" : "info"} dot>
@@ -233,9 +246,11 @@ export default function Home() {
           {tab === "refund" && <RefundForm prefill={prefill} />}
           {tab === "webhooks" && <WebhookLogs config={config} />}
           {tab === "history" && <History navigate={navigate} />}
-          {tab === "pg-hosted" && <HostedForm navigate={navigate} />}
-          {tab === "pg-custom" && <CheckoutBuilder />}
+          {tab === "pg-hosted" && <HostedForm config={config} navigate={navigate} />}
+          {tab === "pg-custom" && <CheckoutBuilder config={config} />}
           {tab === "pg-ops" && <PgOps prefill={prefill} />}
+          {tab === "disbursement" && <DisbursementPanel config={config} />}
+          {tab === "widget" && <WidgetPanel config={config} prefill={prefill} />}
         </div>
       </main>
     </div>

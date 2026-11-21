@@ -86,3 +86,8 @@ export function verifyAsymmetric(publicKey: KeyObject, stringToSign: string, sig
     return false;
   }
 }
+
+/** Sign string apa adanya (dipakai Apply Token: clientKey|timestamp, dan Open API) */
+export function signRaw(privateKeyRaw: string, data: string) {
+  return crypto.sign("RSA-SHA256", Buffer.from(data, "utf8"), loadPrivateKey(privateKeyRaw)).toString("base64");
+}

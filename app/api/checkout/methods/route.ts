@@ -15,12 +15,13 @@ export async function POST(req: Request) {
   if (!v.ok) return NextResponse.json({ ok: false, error: v.error }, { status: 400 });
 
   const cfg = getDanaConfig();
-  const hasStore = Boolean(cfg.externalStoreId);
+  const storeId = v.order.storeId || cfg.externalStoreId;
+  const hasStore = Boolean(storeId);
   const usable = (m: { payOption: string; needsStore?: boolean }) =>
     (!m.needsStore || hasStore) && (!cfg.isSandbox || payOptionAllowedInSandbox(m.payOption));
 
   try {
-    const r = await consultPay({ amount: v.order.amount, clientIp: clientIp(req) });
+    const r = await consultPay({ amount: v.order.amount, externalStoreId: storeId || undefined, clientIp: clientIp(req) });
     const methods = ((r.meta?.methods as typeof SANDBOX_FALLBACK_METHODS) ?? []).filter(usable);
     if (r.ok && methods.length) return NextResponse.json({ ok: true, source: "consult", methods });
     if (!cfg.isSandbox) {

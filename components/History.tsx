@@ -16,7 +16,7 @@ export function useHistory() {
   return items;
 }
 
-const typeTone = (t: HistoryItem["type"]) => (t === "REFUND" ? "warn" : t === "PG" ? "ok" : "info");
+const typeTone = (t: HistoryItem["type"]) => (t === "REFUND" ? "warn" : t === "PG" || t === "WIDGET" ? "ok" : t === "DISB" ? "muted" : "info");
 
 function StatusBadge({ h }: { h: HistoryItem }) {
   const st = h.status ? STATUS_META[h.status] : null;
@@ -39,6 +39,15 @@ function Actions({ h, navigate }: { h: HistoryItem; navigate: Navigate }) {
         </IconBtn>
         <IconBtn title="Refund" onClick={() => navigate("refund", { ref: h.partnerReferenceNo, referenceNo: h.referenceNo, amount: h.amount, type: qrisType })}>
           <Undo2 className="h-4 w-4" />
+        </IconBtn>
+      </div>
+    );
+  }
+  if (h.type === "WIDGET") {
+    return (
+      <div className="flex justify-end gap-1">
+        <IconBtn title="Query / Cancel / Refund" onClick={() => navigate("widget", { ref: h.partnerReferenceNo, referenceNo: h.referenceNo, amount: h.amount })}>
+          <Search className="h-4 w-4" />
         </IconBtn>
       </div>
     );

@@ -2,21 +2,27 @@
 
 import { ExternalLink, LayoutTemplate, Link2, RefreshCw, ShieldCheck } from "lucide-react";
 import QRCode from "qrcode";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { rupiah } from "@/lib/client/api";
 import { AmountInput, Badge, Button, Card, CopyButton, Field, QuickAmounts } from "../ui";
 import ItemsEditor, { ItemRow, itemsTotal } from "./ItemsEditor";
+import type { AppConfig } from "../types";
 
 const SAMPLE: ItemRow[] = [
   { name: "Kopi Susu Gula Aren", price: "22000", quantity: 2 },
   { name: "Croissant Butter", price: "28000", quantity: 1 },
 ];
 
-export default function CheckoutBuilder() {
+export default function CheckoutBuilder({ config }: { config: AppConfig | null }) {
   const [title, setTitle] = useState("Pesanan #1024");
   const [items, setItems] = useState<ItemRow[]>(SAMPLE);
   const [amount, setAmount] = useState("");
   const [ttl, setTtl] = useState("1440");
+  const [storeId, setStoreId] = useState("");
+  useEffect(() => {
+    if (config?.defaultExternalStoreId && !storeId) setStoreId(config.defaultExternalStoreId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config]);
   const [loading, setLoading] = useState(false);
   const [link, setLink] = useState<{ url: string; amount: string; publicCheckout: boolean } | null>(null);
   const [qr, setQr] = useState<string | null>(null);
@@ -33,7 +39,7 @@ export default function CheckoutBuilder() {
       const r = await fetch("/api/pg/checkout-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, goods: items.filter((i) => i.name && i.price), amount: String(total), linkTtlMinutes: Number(ttl) }),
+        body: JSON.stringify({ title, goods: items.filter((i) => i.name && i.price), amount: String(total), linkTtlMinutes: Number(ttl), storeId: storeId || undefined }),
       }).then((x) => x.json());
       if (!r.ok) throw new Error(r.responseMessage || "Gagal membuat link");
       setLink(r);
@@ -54,6 +60,9 @@ export default function CheckoutBuilder() {
           subtitle="Halaman checkout milik merchant: customer pilih metode (Consult Pay), nomor VA / QRIS tampil di halaman sendiri (scenario API)."
         >
           <form onSubmit={generate} className="space-y-4">
+            <Field label="Store ID (externalStoreId)" hint={storeId ? "Wajib untuk QRIS — ikut ditandatangani di link" : "Kosong → opsi QRIS disembunyikan di checkout"}>
+              <input className="input font-mono" value={storeId} onChange={(e) => setStoreId(e.target.value.trim())} placeholder="mis. coba_testing" maxLength={64} />
+            </Field>
             <Field label="Judul pesanan">
               <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={64} required />
             </Field>

@@ -1,6 +1,6 @@
 import "server-only";
 import { danaPost } from "../client";
-import { DANA_PATHS, SERVICE_CODE, getDanaConfig } from "../config";
+import { DANA_PATHS, SERVICE_CODE, getDanaConfig, getModuleCreds } from "../config";
 import { DanaInputError, clean, generateRef, jakartaTimestampPlus, money, optionalString, requireString } from "../utils";
 import { PG_STATUS, SANDBOX_ALLOWED_PAY_METHODS, describeMethod, payOptionAllowedInSandbox } from "./methods";
 
@@ -129,7 +129,7 @@ export async function consultPay(input: { amount: string | number; externalStore
   const cfg = getDanaConfig();
   const externalStoreId = optionalString(input.externalStoreId) || cfg.externalStoreId || undefined;
   const body = clean({
-    merchantId: cfg.merchantId,
+    merchantId: getModuleCreds("PG").merchantId,
     amount: validateAmount(input.amount),
     externalStoreId,
     additionalInfo: {
@@ -137,7 +137,7 @@ export async function consultPay(input: { amount: string | number; externalStore
       envInfo: envInfo(input.clientIp),
     },
   });
-  const result = await danaPost<{ paymentInfos?: { payMethod: string; payOption?: string }[] }>(DANA_PATHS.paymentGateway.consultPay, body);
+  const result = await danaPost<{ paymentInfos?: { payMethod: string; payOption?: string }[] }>(DANA_PATHS.paymentGateway.consultPay, body, { module: "PG" });
   const infos = result.data?.paymentInfos ?? [];
   const seen = new Set<string>();
   const methods = infos
@@ -155,7 +155,7 @@ export async function createHostedOrder(input: OrderInput & { partnerReferenceNo
   const partnerReferenceNo = optionalString(input.partnerReferenceNo) || generateRef("PGH");
   const body = clean({
     partnerReferenceNo,
-    merchantId: cfg.merchantId,
+    merchantId: getModuleCreds("PG").merchantId,
     amount: validateAmount(input.amount),
     externalStoreId: optionalString(input.externalStoreId) || cfg.externalStoreId || undefined,
     validUpTo: validUpTo(input.validMinutes),
@@ -167,7 +167,7 @@ export async function createHostedOrder(input: OrderInput & { partnerReferenceNo
       order: buildOrder(input, "REDIRECT"),
     },
   });
-  const result = await danaPost<{ referenceNo?: string; webRedirectUrl?: string }>(DANA_PATHS.paymentGateway.createOrder, body);
+  const result = await danaPost<{ referenceNo?: string; webRedirectUrl?: string }>(DANA_PATHS.paymentGateway.createOrder, body, { module: "PG" });
   result.meta = { partnerReferenceNo, amount: body.amount.value, validUpTo: body.validUpTo, mode: "HOSTED" };
   return result;
 }
@@ -203,7 +203,7 @@ export async function createCustomOrder(input: CustomOrderInput) {
   }
   const body = clean({
     partnerReferenceNo,
-    merchantId: cfg.merchantId,
+    merchantId: getModuleCreds("PG").merchantId,
     amount,
     externalStoreId,
     validUpTo: validUpTo(input.validMinutes),
@@ -225,7 +225,8 @@ export async function createCustomOrder(input: CustomOrderInput) {
 
   const result = await danaPost<{ referenceNo?: string; webRedirectUrl?: string; additionalInfo?: { paymentCode?: string } }>(
     DANA_PATHS.paymentGateway.createOrder,
-    body
+    body,
+    { module: "PG" }
   );
   result.meta = {
     partnerReferenceNo,
@@ -247,8 +248,8 @@ export async function queryPg(input: { originalPartnerReferenceNo?: string; orig
   const originalPartnerReferenceNo = optionalString(input.originalPartnerReferenceNo);
   const originalReferenceNo = optionalString(input.originalReferenceNo);
   if (!originalPartnerReferenceNo && !originalReferenceNo) throw new DanaInputError("Isi partnerReferenceNo atau referenceNo");
-  const body = clean({ originalPartnerReferenceNo, originalReferenceNo, serviceCode: SERVICE_CODE.PAYMENT_GATEWAY, merchantId: cfg.merchantId });
-  const result = await danaPost<{ latestTransactionStatus?: string; transactionStatusDesc?: string }>(DANA_PATHS.paymentGateway.query, body);
+  const body = clean({ originalPartnerReferenceNo, originalReferenceNo, serviceCode: SERVICE_CODE.PAYMENT_GATEWAY, merchantId: getModuleCreds("PG").merchantId });
+  const result = await danaPost<{ latestTransactionStatus?: string; transactionStatusDesc?: string }>(DANA_PATHS.paymentGateway.query, body, { module: "PG" });
   const st = result.data?.latestTransactionStatus;
   result.meta = { statusLabel: st ? PG_STATUS[st]?.label ?? st : undefined };
   return result;
@@ -259,11 +260,11 @@ export async function cancelPg(input: { originalPartnerReferenceNo: string; orig
   const body = clean({
     originalPartnerReferenceNo: requireString(input.originalPartnerReferenceNo, "originalPartnerReferenceNo", 64),
     originalReferenceNo: optionalString(input.originalReferenceNo),
-    merchantId: cfg.merchantId,
+    merchantId: getModuleCreds("PG").merchantId,
     reason: optionalString(input.reason) || "Cancel from dashboard",
     amount: input.amount ? money(input.amount) : undefined,
   });
-  return danaPost(DANA_PATHS.paymentGateway.cancel, body);
+  return danaPost(DANA_PATHS.paymentGateway.cancel, body, { module: "PG" });
 }
 
 export async function refundPg(input: { originalPartnerReferenceNo: string; originalReferenceNo?: string; amount: string | number; reason?: string }) {
@@ -271,7 +272,7 @@ export async function refundPg(input: { originalPartnerReferenceNo: string; orig
   const partnerRefundNo = generateRef("PGR");
   const refundAmount = money(input.amount);
   const body = clean({
-    merchantId: cfg.merchantId,
+    merchantId: getModuleCreds("PG").merchantId,
     originalPartnerReferenceNo: requireString(input.originalPartnerReferenceNo, "originalPartnerReferenceNo", 64),
     originalReferenceNo: optionalString(input.originalReferenceNo),
     partnerRefundNo,
@@ -283,7 +284,7 @@ export async function refundPg(input: { originalPartnerReferenceNo: string; orig
       envInfo: envInfo(),
     },
   });
-  const result = await danaPost<{ refundNo?: string; refundTime?: string }>(DANA_PATHS.paymentGateway.refund, body);
+  const result = await danaPost<{ refundNo?: string; refundTime?: string }>(DANA_PATHS.paymentGateway.refund, body, { module: "PG" });
   result.meta = { partnerRefundNo, amount: refundAmount.value };
   return result;
 }

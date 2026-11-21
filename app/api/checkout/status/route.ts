@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { queryPg } from "@/lib/dana/payment-gateway";
+import { widgetQuery } from "@/lib/dana/widget";
 import { PG_STATUS } from "@/lib/dana/payment-gateway/methods";
 import { getTxnStatus, saveTxnStatus } from "@/lib/dana/store";
 
@@ -19,7 +20,8 @@ export async function GET(req: Request) {
 
   if (sp.get("query") === "1" && st?.status !== "00") {
     try {
-      const r = await queryPg({ originalPartnerReferenceNo: ref });
+      // WGT… = order Widget (endpoint query berbeda), selain itu Payment Gateway
+      const r = ref.startsWith("WGT") ? await widgetQuery({ originalPartnerReferenceNo: ref }) : await queryPg({ originalPartnerReferenceNo: ref });
       const d = r.data as Record<string, unknown>;
       if (r.ok && d.latestTransactionStatus) {
         const code = String(d.latestTransactionStatus);

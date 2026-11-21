@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDanaConfig } from "@/lib/dana/config";
+import { getDanaConfig, getModuleCreds } from "@/lib/dana/config";
 import { storeMode } from "@/lib/dana/store";
 import { authMode } from "@/lib/captcha";
 
@@ -19,6 +19,13 @@ export async function GET() {
     defaultStoreId: c.storeId,
     defaultExternalStoreId: c.externalStoreId,
     webhookPath: c.webhookPath,
+    disbursementCustomerNumber: c.disbursementCustomerNumber,
+    modules: Object.fromEntries(
+      (["QRIS", "PG", "DISBURSEMENT", "WIDGET"] as const).map((m) => {
+        const k = getModuleCreds(m);
+        return [m, { partnerId: mask(k.partnerId), merchantId: mask(k.merchantId), ready: Boolean(k.partnerId && k.privateKey), clientSecret: Boolean(k.clientSecret) }];
+      })
+    ),
     storeMode,
     authMode: authMode(),
     authEnabled: authMode() === "captcha" || (authMode() === "basic" && Boolean(process.env.DASHBOARD_PASSWORD)),

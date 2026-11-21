@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Ban, CheckCircle2, Globe, LayoutTemplate, QrCode, ScanLine, Search, Undo2, Webhook, XCircle } from "lucide-react";
+import { AppWindow, ArrowDownToLine, ArrowRight, Ban, CheckCircle2, Globe, LayoutTemplate, QrCode, ScanLine, Search, Undo2, Webhook, XCircle } from "lucide-react";
 import { rupiah } from "@/lib/client/api";
 import History, { useHistory } from "./History";
 import { Badge, Card } from "./ui";
@@ -15,6 +15,8 @@ const ACTIONS: { tab: TabKey; title: string; desc: string; icon: React.ReactNode
   { tab: "webhooks", title: "Webhook", desc: "Finish notify log", icon: <Webhook className="h-5 w-5" /> },
   { tab: "pg-hosted", title: "Hosted Checkout", desc: "PG · redirect ke DANA", icon: <Globe className="h-5 w-5" /> },
   { tab: "pg-custom", title: "Custom Checkout", desc: "PG · halaman sendiri", icon: <LayoutTemplate className="h-5 w-5" /> },
+  { tab: "disbursement", title: "Disbursement", desc: "Kirim ke DANA / bank", icon: <ArrowDownToLine className="h-5 w-5" /> },
+  { tab: "widget", title: "Widget", desc: "Binding · saldo · bayar", icon: <AppWindow className="h-5 w-5" /> },
 ];
 
 export default function Overview({ config, navigate }: { config: AppConfig | null; navigate: Navigate }) {
@@ -70,6 +72,22 @@ export default function Overview({ config, navigate }: { config: AppConfig | nul
               </li>
             ))}
           </ul>
+          {config?.modules && (
+            <div className="mt-4 border-t border-ink-700/50 pt-3">
+              <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-ink-400/70">Kredensial per modul</div>
+              <ul className="space-y-1.5">
+                {Object.entries(config.modules).map(([m, v]) => (
+                  <li key={m} className="flex items-center justify-between gap-2 text-xs">
+                    <span className="text-ink-300">{m === "PG" ? "Payment Gateway" : m.charAt(0) + m.slice(1).toLowerCase()}</span>
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="truncate font-mono text-[11px] text-ink-400">{v.merchantId || v.partnerId || "—"}</span>
+                      {v.ready ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400" /> : <XCircle className="h-3.5 w-3.5 shrink-0 text-rose-400" />}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {config && (
             <div className="mt-4 flex flex-wrap gap-2">
               <Badge tone={config.env === "production" ? "bad" : "info"}>{config.env}</Badge>

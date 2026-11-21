@@ -2,12 +2,12 @@
 
 import { ExternalLink, Globe, Search } from "lucide-react";
 import QRCode from "qrcode";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ApiResult, postApi, rupiah } from "@/lib/client/api";
 import { addHistory } from "@/lib/client/history";
 import { AmountInput, Button, Card, CopyButton, Field, KV, QuickAmounts, ResultPanel, cn } from "../ui";
 import ItemsEditor, { ItemRow, itemsTotal } from "./ItemsEditor";
-import type { Navigate } from "../types";
+import type { AppConfig, Navigate } from "../types";
 
 const DISABLE_OPTIONS = [
   { v: "BALANCE", l: "Saldo DANA" },
@@ -17,11 +17,16 @@ const DISABLE_OPTIONS = [
   { v: "DEBIT_CARD", l: "Kartu debit" },
 ];
 
-export default function HostedForm({ navigate }: { navigate: Navigate }) {
+export default function HostedForm({ config, navigate }: { config: AppConfig | null; navigate: Navigate }) {
   const [title, setTitle] = useState("Pembayaran pesanan");
   const [amount, setAmount] = useState("");
   const [items, setItems] = useState<ItemRow[]>([]);
   const [validMinutes, setValidMinutes] = useState("15");
+  const [storeId, setStoreId] = useState("");
+  useEffect(() => {
+    if (config?.defaultExternalStoreId && !storeId) setStoreId(config.defaultExternalStoreId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config]);
   const [disabled, setDisabled] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ApiResult | null>(null);
@@ -39,6 +44,7 @@ export default function HostedForm({ navigate }: { navigate: Navigate }) {
       goods: items.filter((i) => i.name && i.price),
       validMinutes,
       disabledPayMethods: disabled.join(",") || undefined,
+      externalStoreId: storeId || undefined,
     });
     setResult(r);
     setLoading(false);
@@ -66,6 +72,9 @@ export default function HostedForm({ navigate }: { navigate: Navigate }) {
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
       <Card icon={<Globe className="h-5 w-5" />} title="Hosted Checkout" subtitle="Order dibuat via API, customer membayar di halaman DANA (scenario REDIRECT). Paling cepat diintegrasikan.">
         <form onSubmit={submit} className="space-y-4">
+          <Field label="Store ID (externalStoreId)" hint={storeId ? "Wajib untuk QRIS — terdaftar di DANA (Create Shop)" : "Kosong → QRIS tidak bisa dipakai di halaman DANA"}>
+            <input className="input font-mono" value={storeId} onChange={(e) => setStoreId(e.target.value.trim())} placeholder="mis. coba_testing" maxLength={64} />
+          </Field>
           <Field label="Judul order">
             <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={64} required />
           </Field>

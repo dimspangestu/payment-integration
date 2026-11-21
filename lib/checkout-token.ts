@@ -12,6 +12,8 @@ export interface CheckoutOrder {
   title: string;
   goods?: { name: string; price: string; quantity: number }[];
   buyerName?: string;
+  /** externalStoreId — wajib untuk QRIS */
+  storeId?: string;
   /** epoch ms — link kedaluwarsa */
   exp: number;
   /** id unik link, mencegah dua order dari satu link dianggap sama */

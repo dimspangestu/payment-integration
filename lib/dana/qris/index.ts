@@ -1,6 +1,6 @@
 import "server-only";
 import { danaPost } from "../client";
-import { DANA_PATHS, SERVICE_CODE, getDanaConfig } from "../config";
+import { DANA_PATHS, SERVICE_CODE, getDanaConfig, getModuleCreds } from "../config";
 import {
   DanaInputError,
   clean,
@@ -31,7 +31,7 @@ export async function generateMpm(input: MpmInput) {
 
   const partnerReferenceNo = generateRef("MPM");
   const body = clean({
-    merchantId: cfg.merchantId,
+    merchantId: getModuleCreds("QRIS").merchantId,
     partnerReferenceNo,
     amount: money(input.amount),
     storeId,
@@ -48,7 +48,7 @@ export async function generateMpm(input: MpmInput) {
     qrImage?: string;
     referenceNo?: string;
     redirectUrl?: string;
-  }>(DANA_PATHS.qris.mpmGenerate, body);
+  }>(DANA_PATHS.qris.mpmGenerate, body, { module: "QRIS" });
   result.meta = { partnerReferenceNo, amount: body.amount.value, storeId, type: "MPM" };
   return result;
 }
@@ -77,7 +77,7 @@ export async function payCpm(input: CpmInput) {
     partnerReferenceNo,
     qrContent,
     amount,
-    merchantId: cfg.merchantId,
+    merchantId: getModuleCreds("QRIS").merchantId,
     title: cfg.cpmTitle,
     expiryTime: jakartaTimestampPlus(15),
     externalStoreId,
@@ -94,7 +94,7 @@ export async function payCpm(input: CpmInput) {
     },
   });
 
-  const result = await danaPost<{ referenceNo?: string; transactionDate?: string }>(DANA_PATHS.qris.cpmPayment, body);
+  const result = await danaPost<{ referenceNo?: string; transactionDate?: string }>(DANA_PATHS.qris.cpmPayment, body, { module: "QRIS" });
   result.meta = { partnerReferenceNo, amount: amount.value, type: "CPM" };
   return result;
 }
@@ -131,12 +131,13 @@ export async function queryPayment(input: QueryInput) {
     originalPartnerReferenceNo,
     originalReferenceNo,
     serviceCode: input.type === "CPM" ? SERVICE_CODE.QRIS_CPM : SERVICE_CODE.QRIS_MPM,
-    merchantId: cfg.merchantId,
+    merchantId: getModuleCreds("QRIS").merchantId,
   });
 
   const result = await danaPost<{ latestTransactionStatus?: string; transactionStatusDesc?: string }>(
     DANA_PATHS.qris.query,
-    body
+    body,
+    { module: "QRIS" }
   );
   const st = result.data?.latestTransactionStatus;
   result.meta = { statusLabel: st ? TX_STATUS[st] ?? st : undefined };
@@ -158,11 +159,11 @@ export async function cancelPayment(input: CancelInput) {
   const body = clean({
     originalPartnerReferenceNo: requireString(input.originalPartnerReferenceNo, "originalPartnerReferenceNo", 64),
     originalReferenceNo: optionalString(input.originalReferenceNo),
-    merchantId: cfg.merchantId,
+    merchantId: getModuleCreds("QRIS").merchantId,
     reason: optionalString(input.reason) || "Cancel from dashboard",
     amount: input.amount ? money(input.amount) : undefined,
   });
-  return danaPost(DANA_PATHS.qris.cancel, body);
+  return danaPost(DANA_PATHS.qris.cancel, body, { module: "QRIS" });
 }
 
 /* ------------------------------------------------------------------ */
@@ -181,7 +182,7 @@ export async function refundPayment(input: RefundInput) {
   const refundAmount = money(input.amount);
 
   const body = clean({
-    merchantId: cfg.merchantId,
+    merchantId: getModuleCreds("QRIS").merchantId,
     originalPartnerReferenceNo: requireString(input.originalPartnerReferenceNo, "originalPartnerReferenceNo", 64),
     originalReferenceNo: optionalString(input.originalReferenceNo),
     partnerRefundNo,
@@ -196,7 +197,7 @@ export async function refundPayment(input: RefundInput) {
     },
   });
 
-  const result = await danaPost<{ refundNo?: string; refundTime?: string }>(DANA_PATHS.qris.refund, body);
+  const result = await danaPost<{ refundNo?: string; refundTime?: string }>(DANA_PATHS.qris.refund, body, { module: "QRIS" });
   result.meta = { partnerRefundNo, amount: formatAmount(input.amount) };
   return result;
 }

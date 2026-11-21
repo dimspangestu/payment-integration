@@ -55,8 +55,8 @@ URL ini di-rewrite ke `/api/dana/notify` (lihat `next.config.ts`). Jadi **ya, we
 
 | Mode | Cara kerja | Menu |
 |---|---|---|
-| **Hosted** | `scenario: REDIRECT` → customer diarahkan ke `webRedirectUrl` (cashier DANA) | Hosted Checkout |
-| **Custom** | `scenario: API` + `payOptionDetails` → nomor VA / QRIS tampil di halaman `/checkout` milik merchant | Custom Checkout |
+| **Hosted** | `scenario: REDIRECT` → customer diarahkan ke `webRedirectUrl` (cashier DANA). Isi **Store ID** agar QRIS tersedia | Hosted Checkout |
+| **Custom** | `scenario: API` + `payOptionDetails` → nomor VA / QRIS tampil di halaman `/checkout` milik merchant. **Store ID** ikut ditandatangani di link (wajib untuk QRIS) | Custom Checkout |
 
 - Metode bayar di `/checkout` diambil dari **Consult Pay**. Di sandbox ada fallback ke whitelist SDK (Saldo DANA, QRIS, VA BRI/CIMB/BSI/BTPN/Panin, Kartu).
 - Link checkout ditandatangani **HMAC** (`CHECKOUT_SECRET`), jadi amount & item tidak bisa diubah customer.
@@ -73,6 +73,30 @@ app/api/checkout/*                   # publik: methods, order, status
 app/checkout/ (+ /result)            # halaman checkout customer
 components/checkout/*, components/pg/*
 ```
+
+## Disbursement
+
+| Alur | Endpoint (SDK `dana.disbursement.v1`) |
+|---|---|
+| **Ke DANA**: cek akun → kirim → status | `/rest/v1.0/emoney/account-inquiry` → `/rest/v1.0/emoney/topup` → `/rest/v1.0/emoney/topup-status` (serviceCode 38) |
+| **Ke Bank**: cek rekening → kirim → status | `/v1.0/emoney/bank-account-inquiry.htm` → `/v1.0/emoney/transfer-bank.htm` → `/v1.0/emoney/transfer-bank-status.htm` (serviceCode 00) |
+
+- `fundType`: `AGENT_TOPUP_FOR_USER_SETTLE` (ke DANA), `MERCHANT_WITHDRAW_FOR_CORPORATE` (ke bank).
+- Nomor HP otomatis dinormalisasi ke `628xx`. Biaya dari inquiry dipakai sebagai `feeAmount` saat transfer.
+- `DANA_DISBURSEMENT_CUSTOMER_NUMBER` = nomor akun DANA merchant untuk Transfer ke Bank.
+
+## Widget
+
+1. **Binding**: tombol "Hubungkan akun DANA" → `m.sandbox.dana.id/v1.0/get-auth-code` → DANA redirect ke **`/widget/callback?authCode=…`** → Apply Token (`/v1.0/access-token/b2b2c.htm`, signature `clientKey|timestamp`).
+   Daftarkan redirect URL `https://<domain>/widget/callback` di dashboard DANA.
+2. **Widget Payment** (`/rest/redirection/v1.0/debit/payment-host-to-host`) → `webRedirectUrl`. Kalau sudah binding, otomatis **Apply OTT** dan URL bayar ditambah `&ott=…` (tanpa login ulang).
+3. Saldo (`/v1.0/balance-inquiry.htm`), Profil (Open API `queryUserProfile`, butuh `DANA_CLIENT_SECRET`), Refresh token, Unbinding, Query/Cancel/Refund.
+- Header customer (`Authorization-Customer`, `X-DEVICE-ID`, `X-IP-ADDRESS`) mengikuti `SnapHeader` SDK.
+- Sesi binding disimpan di **localStorage browser** (cukup untuk sandbox). Production: simpan token di server per user.
+
+## Kredensial per modul
+
+Di sandbox tiap produk sering beda merchant/client. Isi `DANA_<MODUL>_PARTNER_ID`, `_MERCHANT_ID`, `_PRIVATE_KEY`, `_CLIENT_SECRET` (MODUL = `QRIS`, `PG`, `DISBURSEMENT`, `WIDGET`); kosong = pakai nilai global. Status tiap modul tampil di kartu Konfigurasi (Overview).
 
 ## Webhook
 

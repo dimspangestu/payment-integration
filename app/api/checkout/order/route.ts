@@ -24,6 +24,7 @@ export async function POST(req: Request) {
       orderTitle: order.title,
       goods: order.goods,
       buyerName: order.buyerName,
+      externalStoreId: order.storeId,
       payMethod: b.payMethod as string,
       payOption: b.payOption as string,
       phoneNumber: b.phoneNumber as string,
